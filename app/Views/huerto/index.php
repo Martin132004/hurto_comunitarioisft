@@ -16,53 +16,75 @@
 </div>
 
 <div class="row">
-    <!-- Aquí simulamos un cultivo que requiere riego (Alerta Amarilla/Roja) -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-danger shadow-sm">
-            <div class="card-header bg-danger text-white fw-bold">
-                ¡Requiere Riego Hoy!
-            </div>
-            <div class="card-body">
-                <h5 class="card-title">Tomate Cherry</h5>
-                <p class="card-text mb-1"><small>Plantado: 2026-08-01</small></p>
-                <p class="card-text"><small>Último riego: Hace 3 días</small></p>
-                
-                <a href="<?= base_url('huerto/riego') ?>" class="btn btn-sm btn-outline-primary">Registrar Riego</a>
-            </div>
+    <!-- Verificamos si hay cultivos cargados -->
+    <?php if(empty($cultivos)): ?>
+        <div class="col-12">
+            <div class="alert alert-info">Aún no hay cultivos registrados en tu huerto.</div>
         </div>
-    </div>
+    <?php else: ?>
+        
+        <!-- Recorremos cada planta real de la base de datos -->
+        <?php foreach ($cultivos as $planta): ?>
+            
+            <?php 
+                // Definimos el color de la tarjeta según el algoritmo del controlador
+                $borde = 'border-secondary';
+                $encabezado = 'bg-light text-dark';
+                $mensaje_alerta = 'En Crecimiento';
 
-    <!-- Aquí simulamos un cultivo listo para cosechar (Alerta Verde) -->
-    <div class="col-md-4 mb-3">
-        <div class="card border-success shadow-sm">
-            <div class="card-header bg-success text-white fw-bold">
-                ¡Listo para Cosechar!
-            </div>
-            <div class="card-body">
-                <h5 class="card-title">Lechuga</h5>
-                <p class="card-text mb-1"><small>Plantado: 2026-07-15</small></p>
-                <span class="badge bg-success">Cosecha estimada cumplida</span>
-                
-                <div class="mt-3">
-                    <a href="<?= base_url('huerto/cosechar') ?>" class="btn btn-sm btn-success">Marcar Cosechado</a>
+                // Priorizamos si ya está cosechado (ignoramos otras alertas)
+                if ($planta['estado'] == 'Cosechado') {
+                    $borde = 'border-info';
+                    $encabezado = 'bg-info text-white';
+                    $mensaje_alerta = 'Cosechado y finalizado';
+                }
+                // Alerta Verde: Listo para cosecha
+                elseif ($planta['alerta_cosecha']) {
+                    $borde = 'border-success';
+                    $encabezado = 'bg-success text-white fw-bold';
+                    $mensaje_alerta = '¡Listo para Cosechar!';
+                } 
+                // Alerta Roja/Amarilla: Requiere riego
+                elseif ($planta['alerta_riego']) {
+                    $borde = 'border-danger';
+                    $encabezado = 'bg-danger text-white fw-bold';
+                    $mensaje_alerta = '¡Requiere Riego Hoy!';
+                }
+            ?>
+
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm <?= $borde ?>">
+                    <div class="card-header <?= $encabezado ?>">
+                        <?= $mensaje_alerta ?>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title text-capitalize"><?= esc($planta['nombre_planta']) ?></h5>
+                        <?php if($planta['variedad']): ?>
+                            <h6 class="card-subtitle mb-2 text-muted"><?= esc($planta['variedad']) ?></h6>
+                        <?php endif; ?>
+                        
+                        <hr>
+                        <p class="card-text mb-1"><small>🌱 Sembrado: <?= $planta['fecha_siembra'] ?></small></p>
+                        <p class="card-text"><small>💧 Último Riego: <?= $planta['ultimo_riego'] ? date('Y-m-d', strtotime($planta['ultimo_riego'])) : 'No registrado' ?></small></p>
+                        
+                        <!-- Botones de acción -->
+                        <div class="mt-3 d-flex justify-content-between">
+                            <?php if($planta['estado'] != 'Cosechado'): ?>
+                                <a href="<?= base_url('huerto/riego/'.$planta['id']) ?>" class="btn btn-sm btn-outline-primary">Regar</a>
+                                
+                                <?php if($planta['alerta_cosecha']): ?>
+                                    <a href="<?= base_url('huerto/estado/'.$planta['id']) ?>" class="btn btn-sm btn-success">Cosechar</a>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                            
+                            <a href="<?= base_url('huerto/eliminar/'.$planta['id']) ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Seguro que deseas eliminar esta planta?')">🗑️</a>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Cultivo normal en crecimiento -->
-    <div class="col-md-4 mb-3">
-        <div class="card shadow-sm">
-            <div class="card-header bg-light">
-                En Crecimiento
-            </div>
-            <div class="card-body">
-                <h5 class="card-title">Zanahoria</h5>
-                <p class="card-text mb-1"><small>Faltan 45 días para cosecha</small></p>
-                <span class="badge bg-secondary">Estado Normal</span>
-            </div>
-        </div>
-    </div>
+
+        <?php endforeach; ?>
+    <?php endif; ?>
 </div>
 
 <?= $this->endSection() ?>
