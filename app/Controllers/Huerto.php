@@ -10,46 +10,35 @@ class Huerto extends BaseController
     public function index()
     {
         $model = new CultivoModel();
+        $cultivos = $model->findAll();
         
-        // Obtenemos todos los cultivos de la base de datos
-        $datos['cultivos'] = $model->findAll();
+        $hoy = new \DateTime(); // Fecha actual del sistema
+
+        // Recorremos cada cultivo para calcular sus alertas
+        foreach ($cultivos as &$planta) {
+            
+            // 1. CÁLCULO DE COSECHA
+            $fechaSiembra = new \DateTime($planta['fecha_siembra']);
+            $fechaCosecha = clone $fechaSiembra;
+            // Sumamos los días estimados a la fecha de siembra
+            $fechaCosecha->modify('+' . $planta['dias_cosecha_estimados'] . ' days'); 
+            
+            // Si hoy es mayor o igual a la fecha de cosecha, activamos la alerta verde
+            $planta['alerta_cosecha'] = ($hoy >= $fechaCosecha);
+
+            // 2. CÁLCULO DE RIEGO
+            // Si nunca se regó, tomamos la fecha de siembra como base
+            $ultimoRiego = $planta['ultimo_riego'] ? new \DateTime($planta['ultimo_riego']) : $fechaSiembra;
+            $proximoRiego = clone $ultimoRiego;
+            // Sumamos la frecuencia de riego a la fecha del último riego
+            $proximoRiego->modify('+' . $planta['frecuencia_riego_dias'] . ' days');
+
+            // Si hoy es mayor o igual al día del próximo riego, activamos la alerta roja
+            $planta['alerta_riego'] = ($hoy >= $proximoRiego);
+        }
+
+        $datos['cultivos'] = $cultivos;
         
-        // Más adelante agregaremos aquí el algoritmo de comparación de fechas en PHP
-        
-        // Cargamos la vista principal enviándole los datos
         return view('huerto/index', $datos);
-    }
-
-    // crear(): Procesa y valida los datos del formulario e inserta el nuevo cultivo
-    public function crear()
-    {
-        $model = new CultivoModel();
-        
-        // Aquí programaremos la validación y el $model->save()
-    }
-
-    // registrarRiego($id): Actualiza el campo ultimo_riego a la fecha/hora actual
-    public function registrarRiego($id)
-    {
-        $model = new CultivoModel();
-        
-        // Aquí programaremos la actualización de la fecha
-    }
-
-    // cambiarEstado($id): Permite modificar el estado de la planta
-    public function cambiarEstado($id)
-    {
-        $model = new CultivoModel();
-        
-        // Aquí programaremos el cambio de "En Crecimiento" a "Cosechado"
-    }
-
-    // eliminar($id): Elimina el registro del cultivo
-    public function eliminar($id)
-    {
-        $model = new CultivoModel();
-        $model->delete($id); // Elimina el registro mediante su ID
-        
-        return redirect()->to('/'); // Redirige al panel principal
     }
 }
