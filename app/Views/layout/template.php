@@ -25,7 +25,7 @@
 
     <!-- Pie de página simple -->
     <footer class="text-center mt-5 mb-3 text-muted">
-        <small>&copy; <?= date('Y') ?> - Trabajo Práctico PP III - rodriguez && carrizo</small>
+        <small>&copy; <?= date('Y') ?> - Trabajo Práctico PP III - rodriguez &amp; carrizo</small>
     </footer>
 
     <!-- Script de Bootstrap -->

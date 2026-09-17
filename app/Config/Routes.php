@@ -4,7 +4,6 @@ use CodeIgniter\Router\RouteCollection;
 
 /** @var RouteCollection $routes */
 // Ruta principal: Carga el panel de alertas
-// Ruta principal: Carga el panel de alertas
 $routes->get('/', 'Huerto::index');
 
 // Rutas para el formulario (GET para ver la página, POST para guardar los datos)
