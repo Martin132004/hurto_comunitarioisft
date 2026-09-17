@@ -10,7 +10,7 @@
         <p class="text-muted">inventario y bitácora de cultivos.</p>
     </div>
     <div class="col-md-4 text-end">
-        <!-- Botón para ir al formulario de crear (lo haremos después) -->
+        
         <a href="<?= base_url('huerto/crear') ?>" class="btn btn-primary">+ Nuevo Cultivo</a>
     </div>
 </div>
