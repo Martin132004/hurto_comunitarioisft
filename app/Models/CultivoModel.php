@@ -6,21 +6,27 @@ use CodeIgniter\Model;
 
 class CultivoModel extends Model
 {
-    // Nombre de la tabla y clave primaria definidos
+    // Franjas horarias recomendadas para regar (clave guardada en la db => detalle)
+    public const HORARIOS_RIEGO = [
+        'manana' => ['nombre' => 'Mañana', 'franjas' => ['06:00 - 09:00']],
+        'tarde'  => ['nombre' => 'Tarde',  'franjas' => ['18:00 - 20:00']],
+        'ambos'  => ['nombre' => 'Mañana y tarde', 'franjas' => ['06:00 - 09:00', '18:00 - 20:00']],
+    ];
+
     protected $table      = 'cultivos';
     protected $primaryKey = 'id';
 
-    // Lista de campos permitidos para insertar o modificar
     protected $allowedFields = [
         'nombre_planta',
         'variedad',
         'fecha_siembra',
         'dias_cosecha_estimados',
         'frecuencia_riego_dias',
+        'horario_riego',
+        'cantidad_riego_litros',
         'ultimo_riego',
         'estado'
     ];
 
-    // Activación de la propiedad para la gestión automática de fechas
     protected $useTimestamps = true;
 }

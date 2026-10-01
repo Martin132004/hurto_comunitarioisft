@@ -1,69 +1,98 @@
-# CodeIgniter 4 Application Starter
+# Huerto Comunitario
 
-## What is CodeIgniter?
+Sistema de Gestión de Huertos Urbanos y Comunitarios — Trabajo Práctico Integrador de **Práctica Profesionalizante III** (Tecnicatura Superior en Desarrollo de Software).
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+Permite llevar una bitácora de cultivos, el historial de riego y un panel visual de alertas que indica qué plantas necesitan riego hoy o ya están listas para cosechar, calculado a partir de las fechas registradas.
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+## Tecnologías
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+- PHP 8.1+
+- CodeIgniter 4.x
+- MySQL / MariaDB
+- Bootstrap 5
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+## Requisitos previos
 
-## Installation & updates
+- Servidor local con Apache y MySQL
+- PHP 8.1 o superior con las extensiones `intl`, `mbstring` y `mysqli` habilitadas
+- Composer instalado globalmente
+- Git
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+## Instalación
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+1. Clonar el repositorio dentro de la carpeta web del servidor local:
 
-## Setup
+   ```bash
+   git clone https:///Martin132004/hurto-comunitario.git
+   cd huerto-comunitario
+   composer install
+   ```
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+2. Configurar el archivo de entorno. Copiar `env` a `.env` y verificar los datos de conexión a la base:
 
-## Important Change with index.php
+   ```ini
+   CI_ENVIRONMENT = development
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+   database.default.hostname = localhost
+   database.default.database = huerto_db
+   database.default.username = root
+   database.default.password =
+   database.default.DBDriver = MySQLi
+   ```
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+3. Crear la base de datos `huerto_db` en MySQL (vacía, sin tablas — las tablas las crea la migración).
 
-**Please** read the user guide for a better explanation of how CI4 works!
+4. Ejecutar la migración para crear la tabla `cultivos`:
 
-## Repository Management
+   ```bash
+   php spark migrate
+   ```
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+5. Iniciar el servidor de desarrollo:
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+   ```bash
+   php spark serve
+   ```
 
-## Server Requirements
+6. Abrir `http://localhost:8080` en el navegador.
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+## Estructura del proyecto
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+```
+app/
+├── Config/Routes.php                                → rutas de la aplicación
+├── Database/Migrations/..._CreateTableCultivos.php  → estructura de la tabla 'cultivos'
+├── Models/CultivoModel.php                          → acceso a datos de cultivos
+├── Controllers/Huerto.php                           → lógica de negocio (alertas, alta, riego, cosecha, baja)
+└── Views/
+    ├── layout/template.php                          → plantilla base (navbar, Bootstrap, footer)
+    └── huerto/
+        ├── index.php                                 → panel de alertas
+        └── crear.php                                  → formulario de alta de cultivo
+```
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+## Entidad `cultivos`
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `id` | INT | Clave primaria auto-incremental |
+| `nombre_planta` | VARCHAR | Nombre común del cultivo (ej. Tomate) |
+| `variedad` | VARCHAR, opcional | Subtipo o variedad (ej. Tomate Cherry) |
+| `fecha_siembra` | DATE | Fecha de plantación |
+| `dias_cosecha_estimados` | INT | Días aproximados hasta la cosecha |
+| `frecuencia_riego_dias` | INT | Cada cuántos días requiere riego |
+| `ultimo_riego` | DATETIME | Fecha y hora del último riego registrado |
+| `estado` | VARCHAR | En Crecimiento / Listo para Cosechar / Cosechado |
+| `created_at` / `updated_at` | DATETIME | Gestionados automáticamente por el framework |
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+## Funcionalidades
+
+- **Panel de alertas** (`/`): calcula por fecha qué plantas necesitan riego hoy (rojo) o están listas para cosechar (verde).
+- **Alta de cultivo** (`/huerto/crear`): formulario para registrar un nuevo cultivo.
+- **Registrar riego** (`/huerto/riego/{id}`): actualiza `ultimo_riego` a la fecha/hora actual.
+- **Cambiar estado** (`/huerto/estado/{id}`): marca el cultivo como Cosechado.
+- **Eliminar** (`/huerto/eliminar/{id}`): borra el registro del cultivo.
+
+## Autores
+
+Rodríguez & Carrizo — Práctica Profesionalizante III, 2° Año.

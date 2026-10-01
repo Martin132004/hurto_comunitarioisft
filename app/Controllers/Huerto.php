@@ -6,51 +6,39 @@ use App\Models\CultivoModel;
 
 class Huerto extends BaseController
 {
-    // index() (Panel de Alertas): Consulta la BD y determina riegos/cosechas
     public function index()
     {
         $model = new CultivoModel();
         $cultivos = $model->findAll();
-        
-        $hoy = new \DateTime(); // Fecha actual del sistema
 
-        // Recorremos cada cultivo para calcular sus alertas
+        $hoy = new \DateTime();
+
         foreach ($cultivos as &$planta) {
-            
-            // 1. CÁLCULO DE COSECHA
+
             $fechaSiembra = new \DateTime($planta['fecha_siembra']);
             $fechaCosecha = clone $fechaSiembra;
-            // Sumamos los días estimados a la fecha de siembra
-            $fechaCosecha->modify('+' . $planta['dias_cosecha_estimados'] . ' days'); 
-            
-            // Si hoy es mayor o igual a la fecha de cosecha, activamos alerta
+            $fechaCosecha->modify('+' . $planta['dias_cosecha_estimados'] . ' days');
+
             $planta['alerta_cosecha'] = ($hoy >= $fechaCosecha);
 
-            // 2. CÁLCULO DE RIEGO
-            // Si nunca se regó, tomamos la fecha de siembra como base
             $ultimoRiego = $planta['ultimo_riego'] ? new \DateTime($planta['ultimo_riego']) : clone $fechaSiembra;
             $proximoRiego = clone $ultimoRiego;
-            // Sumamos la frecuencia de riego a la fecha del último riego
             $proximoRiego->modify('+' . $planta['frecuencia_riego_dias'] . ' days');
 
-            // Si hoy es mayor o igual al día del próximo riego, activamos alerta
             $planta['alerta_riego'] = ($hoy >= $proximoRiego);
         }
 
         $datos['cultivos'] = $cultivos;
-        
+
         return view('huerto/index', $datos);
     }
 
-    // crear(): Procesa los datos del formulario e inserta el nuevo cultivo
     public function crear()
     {
-        // Si el usuario entra a ver la página, mostramos el formulario
         if ($this->request->getMethod() === 'GET') {
-            return view('huerto/crear');
+            return view('huerto/crear', ['horarios' => CultivoModel::HORARIOS_RIEGO]);
         }
 
-        // Si envió el formulario, guardamos los datos
         $model = new CultivoModel();
         
         $datos = [
@@ -59,23 +47,72 @@ class Huerto extends BaseController
             'fecha_siembra'          => $this->request->getPost('fecha_siembra'),
             'dias_cosecha_estimados' => $this->request->getPost('dias_cosecha_estimados'),
             'frecuencia_riego_dias'  => $this->request->getPost('frecuencia_riego_dias'),
+            'horario_riego'          => $this->request->getPost('horario_riego'),
+            'cantidad_riego_litros'  => $this->request->getPost('cantidad_riego_litros'),
             'estado'                 => 'En Crecimiento',
-            'ultimo_riego'           => date('Y-m-d H:i:s')
+            'ultimo_riego'           => null
         ];
 
         $model->save($datos);
         return redirect()->to('/');
     }
 
-    // registrarRiego($id): Actualiza el campo ultimo_riego a la fecha/hora actual
     public function registrarRiego($id)
     {
         $model = new CultivoModel();
         $model->update($id, ['ultimo_riego' => date('Y-m-d H:i:s')]);
-        return redirect()->to('/');
+
+        // Redirigimos a la pantalla de riego para que recargarla no registre otro riego
+        return redirect()->to('huerto/regando/' . $id);
     }
 
-    // cambiarEstado($id): Permite modificar el estado de la planta a Cosechado
+    public function regando($id)
+    {
+        $model = new CultivoModel();
+        $planta = $model->find($id);
+
+        if (! $planta) {
+            return redirect()->to('/');
+        }
+
+        $frecuencia = max(1, (int) $planta['frecuencia_riego_dias']);
+        $ultimoRiego = new \DateTime($planta['ultimo_riego'] ?? 'now');
+
+        $proximoRiego = clone $ultimoRiego;
+        $proximoRiego->modify('+' . $frecuencia . ' days');
+
+        $fechaCosecha = new \DateTime($planta['fecha_siembra']);
+        $fechaCosecha->modify('+' . $planta['dias_cosecha_estimados'] . ' days');
+
+        // Próximos riegos programados hasta la cosecha (máximo 5 para mostrar)
+        $calendario = [];
+        $fecha = clone $proximoRiego;
+        while ($fecha <= $fechaCosecha && count($calendario) < 5) {
+            $calendario[] = clone $fecha;
+            $fecha->modify('+' . $frecuencia . ' days');
+        }
+
+        $riegosRestantes = 0;
+        if ($proximoRiego <= $fechaCosecha) {
+            $diasHastaCosecha = (int) $proximoRiego->diff($fechaCosecha)->days;
+            $riegosRestantes = intdiv($diasHastaCosecha, $frecuencia) + 1;
+        }
+
+        $horarios = CultivoModel::HORARIOS_RIEGO;
+
+        $datos = [
+            'planta'          => $planta,
+            'frecuencia'      => $frecuencia,
+            'proximoRiego'    => $proximoRiego,
+            'calendario'      => $calendario,
+            'riegosRestantes' => $riegosRestantes,
+            'horario'         => $horarios[$planta['horario_riego']] ?? $horarios['manana'],
+            'cantidad'        => (float) $planta['cantidad_riego_litros'],
+        ];
+
+        return view('huerto/regando', $datos);
+    }
+
     public function cambiarEstado($id)
     {
         $model = new CultivoModel();
@@ -83,7 +120,6 @@ class Huerto extends BaseController
         return redirect()->to('/');
     }
 
-    // eliminar($id): Elimina el registro del cultivo
     public function eliminar($id)
     {
         $model = new CultivoModel();

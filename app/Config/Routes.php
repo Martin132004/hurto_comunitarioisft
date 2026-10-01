@@ -12,5 +12,6 @@ $routes->post('huerto/crear', 'Huerto::crear');
 
 // Rutas para las acciones de los botones en las tarjetas
 $routes->get('huerto/riego/(:num)', 'Huerto::registrarRiego/$1');
+$routes->get('huerto/regando/(:num)', 'Huerto::regando/$1');
 $routes->get('huerto/estado/(:num)', 'Huerto::cambiarEstado/$1');
 $routes->get('huerto/eliminar/(:num)', 'Huerto::eliminar/$1');
