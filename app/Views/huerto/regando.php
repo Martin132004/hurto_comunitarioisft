@@ -135,7 +135,7 @@
                     <div class="col-sm-6 col-md-3">
                         <div class="plan-dato">
                             <div class="valor"><?= number_format($cantidad, 1, ',', '.') ?> L</div>
-                            <div class="etiqueta"><i class="bi bi-cup-straw me-1"></i>Por riego</div>
+                            <div class="etiqueta"><i class="bi bi-cup-straw me-1"></i>Por riego este mes</div>
                         </div>
                     </div>
                     <div class="col-sm-6 col-md-3">
@@ -145,6 +145,26 @@
                         </div>
                     </div>
                 </div>
+
+                <p class="small text-muted mb-4">
+                    <i class="bi bi-info-circle me-1"></i>
+                    La planta necesita <?= number_format($litrosPlanta, 1, ',', '.') ?> L en primavera u otoño. Los litros de cada riego se ajustan al mes
+                    y a tu método de riego (<?= esc(mb_strtolower($metodo['nombre'])) ?>, aprovecha ~<?= round($metodo['eficiencia'] * 100) ?>% del agua).
+                </p>
+
+                <?php if ($usaTurno): ?>
+                    <div class="alert <?= $riegosEntreTurnos > 0 ? 'alert-warning' : 'alert-success' ?> rounded-4 small">
+                        <i class="bi bi-water me-1"></i>
+                        <?php if (! empty($proximosTurnos)): ?>
+                            Próximo turno de agua: <strong><?= $proximosTurnos[0]->format('Y-m-d') === date('Y-m-d') ? 'hoy' : $proximosTurnos[0]->format('d/m') ?></strong>.
+                        <?php endif; ?>
+                        <?php if ($riegosEntreTurnos > 0): ?>
+                            Esta planta necesita <?= $riegosEntreTurnos ?> riego(s) entre turnos: guardá unos <?= number_format($riegosEntreTurnos * $cantidad, 1, ',', '.') ?> L para ella.
+                        <?php else: ?>
+                            Con regarla en cada turno alcanza.
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
 
                 <h6 class="seccion-titulo"><i class="bi bi-clock me-2"></i>Horario recomendado: <?= $horario['nombre'] ?></h6>
                 <div class="d-flex flex-wrap gap-2 mb-4">
@@ -158,10 +178,19 @@
                     <p class="text-muted mb-0">No quedan riegos programados antes de la fecha estimada de cosecha.</p>
                 <?php else: ?>
                     <ul class="list-group list-group-flush">
-                        <?php foreach ($calendario as $fecha): ?>
-                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                <span><i class="bi bi-droplet text-primary me-2"></i><?= $fecha->format('d/m/Y') ?></span>
-                                <small class="text-muted"><?= implode(' y ', $horario['franjas']) ?> hs · <?= number_format($cantidad, 1, ',', '.') ?> L</small>
+                        <?php foreach ($calendario as $riego): ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-1 px-0">
+                                <span>
+                                    <i class="bi bi-droplet text-primary me-2"></i><?= $riego['fecha']->format('d/m/Y') ?>
+                                    <?php if ($usaTurno): ?>
+                                        <?php if ($riego['turno']): ?>
+                                            <span class="badge rounded-pill text-bg-success ms-1">Día de turno</span>
+                                        <?php else: ?>
+                                            <span class="badge rounded-pill text-bg-light border ms-1">Con agua guardada</span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </span>
+                                <small class="text-muted"><?= implode(' y ', $horario['franjas']) ?> hs · <?= number_format($riego['litros'], 1, ',', '.') ?> L</small>
                             </li>
                         <?php endforeach; ?>
                     </ul>
