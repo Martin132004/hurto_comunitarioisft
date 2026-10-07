@@ -17,6 +17,7 @@ class CultivoModel extends Model
     protected $primaryKey = 'id';
 
     protected $allowedFields = [
+        'cantero_id',
         'nombre_planta',
         'variedad',
         'fecha_siembra',
