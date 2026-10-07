@@ -1579,7 +1579,7 @@ function renderCultivos() {
     lista.innerHTML = activos.map(c => {
         const dias = diasEntre(c.inicio, hoy);
         const acciones = [
-            c.regar ? `<a href="${D.urls.regar.replace('{id}', c.id)}" class="badge text-bg-primary text-decoration-none">💧 Regar</a>` : '',
+            c.regar ? `<form action="${D.urls.regar.replace('{id}', c.id)}" method="POST" class="d-inline"><button type="submit" class="badge text-bg-primary border-0">💧 Regar</button></form>` : '',
             c.cosechar ? `<a href="${D.urls.cosechar.replace('{id}', c.id)}" class="badge text-bg-warning text-decoration-none">🧺 Cosechar</a>` : '',
             c.problemas ? `<span class="badge text-bg-danger">🐛 ${c.problemas}</span>` : '',
         ].join(' ');

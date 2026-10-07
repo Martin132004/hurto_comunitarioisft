@@ -24,12 +24,16 @@ Permite llevar una bitácora de cultivos, el historial de riego y un panel visua
 1. Clonar el repositorio dentro de la carpeta web del servidor local:
 
    ```bash
-   git clone https:///Martin132004/hurto-comunitario.git
+   git clone https://github.com/Martin132004/hurto_comunitarioisft.git huerto-comunitario
    cd huerto-comunitario
    composer install
    ```
 
-2. Configurar el archivo de entorno. Copiar `env` a `.env` y verificar los datos de conexión a la base:
+2. Configurar el archivo de entorno. Copiar la plantilla `env` a `.env` (el `.env` no se sube al repositorio) y verificar los datos de conexión a la base:
+
+   ```bash
+   cp env .env        # en Windows (cmd): copy env .env
+   ```
 
    ```ini
    CI_ENVIRONMENT = development
@@ -43,7 +47,7 @@ Permite llevar una bitácora de cultivos, el historial de riego y un panel visua
 
 3. Crear la base de datos `huerto_db` en MySQL (vacía, sin tablas — las tablas las crea la migración).
 
-4. Ejecutar las migraciones para crear las tablas `cultivos`, `especies`, `zonas`, `huertos`, `problemas`, `reportes_problemas`, `riegos` y `cosechas`:
+4. Ejecutar las migraciones para crear las tablas `cultivos`, `especies`, `zonas`, `huertos`, `problemas`, `reportes_problemas`, `riegos`, `cosechas`, `plano_elementos` y `siembras_planificadas`:
 
    ```bash
    php spark migrate
@@ -142,10 +146,10 @@ Los datos son propios del sistema (no dependen de servicios externos) y están p
 - **Sistema de riego**: los litros de cada cultivo se cargan como lo que necesita la planta en primavera u otoño y el sistema calcula cuánto aplicar según el mes de la zona y la eficiencia del método (goteo 90%, manguera 80%, aspersión 70%, surco 60%, manto 50%). Si el agua llega por turno de canal, muestra los próximos turnos, marca qué riegos caen en día de turno y cuáles hay que hacer con agua guardada, y avisa si lo que se puede guardar no alcanza entre turnos. Esto se ve en el panel, en la pantalla de riego, en Mi huerto y en la guía al agregar un cultivo.
 - **Guía de cultivo** (en el alta): al escribir el nombre de la planta, el sistema reconoce la especie (acepta plurales, tildes y sinónimos como "morrón" o "choclo"), muestra cómo cultivarla con el calendario de almácigo y trasplante de la zona, permite completar el formulario con los valores recomendados y analiza el caso concreto: si la fecha está dentro de la temporada de la zona, riesgo de helada al plantar y si la cosecha llega antes de la primera helada, tolerancia a las sales, la cosecha estimada, valores cargados muy distintos a los recomendados, buenos y malos vecinos entre los cultivos que ya están en el huerto, familias repetidas, siembras muy seguidas de la misma especie y el consumo semanal de agua del huerto.
 - **Problemas y plagas** (`/huerto/problemas`): el huertero reporta un problema de un cultivo con foto (el navegador la achica antes de subirla para que se envíe rápido con poca señal), cuánto afecta y lo que ve; puede elegirlo de una lista filtrada según el cultivo o dejarlo como "No sé qué es". El técnico responde desde el mismo reporte y confirma o corrige el diagnóstico. El sistema muestra qué problemas vigilar este mes según los cultivos del huerto y la zona, avisa si el mismo problema aparece en varios cultivos y genera una alerta de zona cuando varias huertas de la misma zona reportan lo mismo en los últimos 21 días. Incluye una guía con síntomas, manejo agroecológico y prevención de 15 problemas frecuentes (pulgones, arañuela, mosca blanca, trips, polilla del tomate, oídio, podredumbre apical, golpe de sol, helada, Zonda, sales y otros). Las fotos se guardan en `writable/uploads/problemas`, fuera de la carpeta pública.
-- **Registrar riego** (`/huerto/riego/{id}`): actualiza `ultimo_riego` y guarda el riego en el historial (`riegos`) con los litros ajustados al mes y al método.
+- **Registrar riego** (`POST /huerto/riego/{id}`): actualiza `ultimo_riego` y guarda el riego en el historial (`riegos`) con los litros ajustados al mes y al método.
 - **Cosechar** (`/huerto/cosechar/{id}`): registra la fecha y los kg cosechados (se puede dejar sin pesar). Admite cosechas parciales (tomate, acelga) y la cosecha final, que pasa el cultivo a Cosechado.
 - **Reportes mensuales** (`/huerto/reportes`): hoja con formato de comprobante (número de reporte, período, datos del huerto, detalle y totales) con producción en kg, riegos registrados contra los que correspondían según el plan, litros aplicados, siembras, problemas reportados, agua por kg cosechado y espacio para observaciones y firmas del responsable y del técnico. Se elige el mes y se descarga en PDF (A4).
-- **Eliminar** (`/huerto/eliminar/{id}`): borra el registro del cultivo.
+- **Eliminar** (`POST /huerto/eliminar/{id}`, con confirmación): borra el registro del cultivo.
 
 ## Autores
 

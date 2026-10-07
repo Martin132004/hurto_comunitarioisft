@@ -257,6 +257,7 @@
 
     .cultivo-acciones { display: flex; gap: .5rem; margin-top: auto; padding-top: 1rem; }
     .cultivo-acciones .btn { flex: 1; font-size: .85rem; padding: .5rem .75rem; }
+    .cultivo-acciones form { flex: 1; display: flex; }
     .btn-agua {
         background: var(--agua-600);
         border: 1px solid #125a93;
@@ -558,9 +559,9 @@
                                     <li><hr class="dropdown-divider"></li>
                                 <?php endif; ?>
                                 <li>
-                                    <a class="dropdown-item text-danger" href="<?= base_url('huerto/eliminar/' . $planta['id']) ?>" onclick="return confirm('¿Seguro que querés eliminar este cultivo?')">
-                                        <i class="bi bi-trash3"></i>Eliminar
-                                    </a>
+                                    <form action="<?= base_url('huerto/eliminar/' . $planta['id']) ?>" method="POST" onsubmit="return confirm('¿Seguro que querés eliminar este cultivo?')">
+                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash3"></i>Eliminar</button>
+                                    </form>
                                 </li>
                             </ul>
                         </div>
@@ -621,7 +622,9 @@
 
                     <?php if (! $cosechado): ?>
                         <div class="cultivo-acciones">
-                            <a href="<?= base_url('huerto/riego/' . $planta['id']) ?>" class="btn <?= $planta['alerta_riego'] ? 'btn-agua' : 'btn-light' ?>"><i class="bi bi-droplet-fill me-1"></i>Regar</a>
+                            <form action="<?= base_url('huerto/riego/' . $planta['id']) ?>" method="POST">
+                                <button type="submit" class="btn <?= $planta['alerta_riego'] ? 'btn-agua' : 'btn-light' ?>"><i class="bi bi-droplet-fill me-1"></i>Regar</button>
+                            </form>
                             <?php if ($planta['alerta_cosecha'] || isset($kgCosechados[$planta['id']])): ?>
                                 <a href="<?= base_url('huerto/cosechar/' . $planta['id']) ?>" class="btn btn-cosecha"><i class="bi bi-basket2 me-1"></i>Cosechar</a>
                             <?php endif; ?>

@@ -15,13 +15,13 @@ $routes->get('huerto/configuracion', 'Huerto::configuracion');
 $routes->post('huerto/configuracion', 'Huerto::configuracion');
 
 // Rutas para las acciones de los botones en las tarjetas
-$routes->get('huerto/riego/(:num)', 'Huerto::registrarRiego/$1');
+$routes->post('huerto/riego/(:num)', 'Huerto::registrarRiego/$1');
 $routes->get('huerto/regando/(:num)', 'Huerto::regando/$1');
 // Cosecha con kg (la ruta vieja de cambiar estado muestra el mismo formulario)
 $routes->get('huerto/cosechar/(:num)', 'Huerto::cosechar/$1');
 $routes->post('huerto/cosechar/(:num)', 'Huerto::cosechar/$1');
 $routes->get('huerto/estado/(:num)', 'Huerto::cosechar/$1');
-$routes->get('huerto/eliminar/(:num)', 'Huerto::eliminar/$1');
+$routes->post('huerto/eliminar/(:num)', 'Huerto::eliminar/$1');
 
 // Reporte de problemas y plagas
 $routes->get('huerto/problemas', 'Problemas::index');
