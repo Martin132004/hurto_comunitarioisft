@@ -10,7 +10,7 @@
     .guia-vacia {
         text-align: center;
         padding: 2.5rem 1.5rem;
-        color: #6c757d;
+        color: var(--texto-2);
     }
     .guia-vacia i {
         font-size: 2.5rem;
@@ -24,7 +24,7 @@
     }
     .guia-dato .etiqueta {
         font-size: .72rem;
-        color: #6c757d;
+        color: var(--texto-2);
         font-weight: 500;
     }
     .guia-dato .valor {
@@ -36,7 +36,7 @@
         font-size: .8rem;
         text-transform: uppercase;
         letter-spacing: .05em;
-        color: #6c757d;
+        color: var(--texto-2);
         font-weight: 700;
         margin: 1.25rem 0 .6rem;
     }
@@ -70,12 +70,12 @@
     <div class="col-lg-7">
         <div class="panel-form">
             <div class="huerto-hero rounded-0 py-4 px-4 px-md-5">
-                <h4 class="fw-bold mb-1"><i class="bi bi-flower1 me-2"></i>Agregar Nuevo Cultivo</h4>
+                <h1 class="fw-bold mb-1"><i class="bi bi-flower1 me-2"></i>Agregar Nuevo Cultivo</h1>
                 <p class="mb-0 opacity-75 small">Completá los datos para empezar a seguir su riego y cosecha.</p>
             </div>
             <div class="p-4 p-md-5">
                 <?php if ($plan): ?>
-                    <div class="alert alert-success d-flex gap-2 align-items-start mb-4">
+                    <div class="alert alert-success d-flex gap-2 align-items-start mb-4" role="status">
                         <i class="bi bi-calendar2-check mt-1"></i>
                         <div>Estás sembrando lo que planificaste en el plano 3D<?= $plan['plantas'] ? ' (' . (int) $plan['plantas'] . ' plantas)' : '' ?>. Revisá los datos y guardalo.<?= $plan['notas'] ? '<div class="small mt-1">' . esc($plan['notas']) . '</div>' : '' ?></div>
                     </div>
@@ -86,8 +86,8 @@
                     <?php endif; ?>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-tag me-1"></i> Nombre de la Planta</label>
-                            <input type="text" name="nombre_planta" class="form-control" required placeholder="Ej. Tomate" list="listaEspecies" autocomplete="off" value="<?= esc($plan['especie'] ?? '') ?>">
+                            <label class="form-label" for="campo_nombre_planta"><i class="bi bi-tag me-1"></i> Nombre de la Planta</label>
+                            <input type="text" id="campo_nombre_planta" name="nombre_planta" class="form-control" required placeholder="Ej. Tomate" list="listaEspecies" autocomplete="off" value="<?= esc($plan['especie'] ?? '') ?>">
                             <datalist id="listaEspecies">
                                 <?php foreach ($especies as $especie): ?>
                                     <option value="<?= esc($especie['nombre']) ?>">
@@ -95,50 +95,50 @@
                             </datalist>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-bookmark me-1"></i> Variedad (Opcional)</label>
-                            <input type="text" name="variedad" class="form-control" placeholder="Ej. Perita" value="<?= esc($plan['variedad'] ?? '') ?>">
+                            <label class="form-label" for="campo_variedad"><i class="bi bi-bookmark me-1"></i> Variedad (Opcional)</label>
+                            <input type="text" id="campo_variedad" name="variedad" class="form-control" placeholder="Ej. Perita" value="<?= esc($plan['variedad'] ?? '') ?>">
                         </div>
                     </div>
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
-                            <label class="form-label"><i class="bi bi-calendar-event me-1"></i> Fecha de Siembra</label>
-                            <input type="date" name="fecha_siembra" class="form-control" value="<?= date('Y-m-d') ?>" required>
-                            <div class="form-text">Si viene de almácigo, poné la fecha de trasplante.</div>
+                            <label class="form-label" for="campo_fecha_siembra"><i class="bi bi-calendar-event me-1"></i> Fecha de Siembra</label>
+                            <input type="date" id="campo_fecha_siembra" aria-describedby="ayuda_fecha_siembra" name="fecha_siembra" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                            <div class="form-text" id="ayuda_fecha_siembra">Si viene de almácigo, poné la fecha de trasplante.</div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label"><i class="bi bi-basket2 me-1"></i> Días para Cosecha</label>
-                            <input type="number" name="dias_cosecha_estimados" class="form-control" min="1" required value="<?= esc($plan['dias_cosecha'] ?? '') ?>">
+                            <label class="form-label" for="campo_dias_cosecha_estimados"><i class="bi bi-basket2 me-1"></i> Días para Cosecha</label>
+                            <input type="number" id="campo_dias_cosecha_estimados" name="dias_cosecha_estimados" class="form-control" min="1" required value="<?= esc($plan['dias_cosecha'] ?? '') ?>">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label"><i class="bi bi-droplet me-1"></i> Frecuencia Riego (Días)</label>
-                            <input type="number" name="frecuencia_riego_dias" class="form-control" min="1" required>
+                            <label class="form-label" for="campo_frecuencia_riego_dias"><i class="bi bi-droplet me-1"></i> Frecuencia Riego (Días)</label>
+                            <input type="number" id="campo_frecuencia_riego_dias" name="frecuencia_riego_dias" class="form-control" min="1" required>
                         </div>
                     </div>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-clock me-1"></i> Horario de Riego</label>
-                            <select name="horario_riego" class="form-control" required>
+                            <label class="form-label" for="campo_horario_riego"><i class="bi bi-clock me-1"></i> Horario de Riego</label>
+                            <select id="campo_horario_riego" name="horario_riego" class="form-control" required>
                                 <?php foreach ($horarios as $clave => $horario): ?>
                                     <option value="<?= $clave ?>"><?= $horario['nombre'] ?> (<?= implode(' y ', $horario['franjas']) ?>)</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label"><i class="bi bi-cup-straw me-1"></i> Cantidad por Riego (Litros)</label>
-                            <input type="number" name="cantidad_riego_litros" class="form-control" step="0.1" min="0.1" required placeholder="Ej. 1.5">
-                            <div class="form-text">Lo que necesita la planta en primavera u otoño. El sistema lo ajusta según el mes y tu método de riego.</div>
+                            <label class="form-label" for="campo_cantidad_riego_litros"><i class="bi bi-cup-straw me-1"></i> Cantidad por Riego (Litros)</label>
+                            <input type="number" id="campo_cantidad_riego_litros" aria-describedby="ayuda_cantidad_riego" name="cantidad_riego_litros" class="form-control" step="0.1" min="0.1" required placeholder="Ej. 1.5">
+                            <div class="form-text" id="ayuda_cantidad_riego">Lo que necesita la planta en primavera u otoño. El sistema lo ajusta según el mes y tu método de riego.</div>
                         </div>
                     </div>
                     <?php if ($canteros): ?>
                         <div class="mb-4">
-                            <label class="form-label"><i class="bi bi-bounding-box me-1"></i> Cantero (Opcional)</label>
-                            <select name="cantero_id" class="form-control">
+                            <label class="form-label" for="campo_cantero_id"><i class="bi bi-bounding-box me-1"></i> Cantero (Opcional)</label>
+                            <select id="campo_cantero_id" aria-describedby="ayuda_cantero" name="cantero_id" class="form-control">
                                 <option value="">Sin ubicar en el plano</option>
                                 <?php foreach ($canteros as $id => $nombre): ?>
                                     <option value="<?= $id ?>" <?= (int) ($plan['cantero_id'] ?? $_GET['cantero'] ?? 0) === $id ? 'selected' : '' ?>><?= esc($nombre) ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <div class="form-text">Así aparece en el <a href="<?= base_url('huerto/plano') ?>">huerto 3D</a> y entra en la planificación de ese cantero.</div>
+                            <div class="form-text" id="ayuda_cantero">Así aparece en el <a href="<?= base_url('huerto/plano') ?>">huerto 3D</a> y entra en la planificación de ese cantero.</div>
                         </div>
                     <?php endif; ?>
                     <div class="d-flex justify-content-end gap-2">
@@ -151,7 +151,7 @@
     </div>
 
     <div class="col-lg-5">
-        <aside class="panel-form guia" aria-live="polite">
+        <aside class="panel-form guia" aria-label="Guía de cultivo">
             <div id="guiaContenido" class="p-4">
                 <div class="guia-vacia">
                     <i class="bi bi-book"></i>
@@ -314,6 +314,7 @@
         alerta: 'bi-x-octagon-fill text-danger',
         info:   'bi-info-circle-fill text-primary',
     };
+    const TIPOS = { ok: 'Bien', aviso: 'Atención', alerta: 'Problema', info: 'Dato' };
 
     function analizar(especie) {
         const resultado = [];
@@ -497,7 +498,7 @@
                 ${dato('bi-clock', 'Horario', esc(horario))}
                 ${dato('bi-cup-straw', 'Por riego', numero(especie.litros) + ' L')}
             </div>
-            <button type="button" id="usarRecomendados" class="btn btn-huerto btn-sm w-100">
+            <button type="button" id="usarRecomendados" class="btn btn-outline-success btn-sm w-100">
                 <i class="bi bi-magic me-1"></i> Usar valores recomendados
             </button>
 
@@ -517,7 +518,7 @@
         const lista = document.getElementById('analisis');
         if (!lista) return;
         lista.innerHTML = analizar(especie)
-            .map(item => `<li><i class="bi ${ICONOS[item.tipo]}"></i><span>${item.html}</span></li>`)
+            .map(item => `<li><i class="bi ${ICONOS[item.tipo]}" aria-hidden="true"></i><span><span class="visually-hidden">${TIPOS[item.tipo]}: </span>${item.html}</span></li>`)
             .join('');
     }
 

@@ -62,10 +62,12 @@
 
             --agua-600: #1769aa;
             --agua-100: #e3f0fb;
-            --cosecha-600: #c2610c;
+            --cosecha-600: #ab550a; /* antes #c2610c: oscurecido para llegar a 4.5:1 sobre --cosecha-100 */
             --cosecha-100: #fdf0e1;
             --alerta-600: #c0392b;
             --alerta-100: #fbe9e7;
+            --alerta-200: #f2c9c3;
+            --neutro-100: #eef0eb;
 
             --fondo: #f5f6f1;
             --superficie: #ffffff;
@@ -73,7 +75,7 @@
             --borde-suave: #edf0e9;
             --texto: #14211a;
             --texto-2: #5d6b62;
-            --texto-3: #8b978f;
+            --texto-3: #66726a; /* antes #8b978f: oscurecido para llegar a 4.5:1 sobre --fondo */
 
             --radio: 14px;
             --radio-sm: 10px;
@@ -104,7 +106,8 @@
             --bs-link-hover-color-rgb: 10, 58, 31;
         }
 
-        html { scroll-behavior: smooth; }
+        /* El foco y los anclas no quedan tapados por la barra superior fija (64px) */
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
 
         body {
             font-family: var(--bs-body-font-family);
@@ -122,7 +125,31 @@
 
         .text-muted { color: var(--texto-2) !important; }
         .text-success { color: var(--at-600) !important; }
+        .text-warning { color: var(--cosecha-600) !important; }
         ::selection { background: var(--at-100); color: var(--at-900); }
+
+        /* Enlace para saltar el menú con el teclado */
+        .at-saltar {
+            position: fixed;
+            top: .75rem;
+            left: .75rem;
+            z-index: 1100;
+            padding: .6rem 1rem;
+            border-radius: var(--radio-sm);
+            background: var(--at-900);
+            color: #fff;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .at-saltar:focus { color: #fff; outline: 2px solid var(--at-300); outline-offset: 2px; }
+        .at-contenido:focus { outline: none; }
+
+        /* Fondos de ícono por tipo (tarjetas, encabezados, chips) */
+        .tono-verde   { background: var(--at-50) !important; color: var(--at-600) !important; }
+        .tono-agua    { background: var(--agua-100) !important; color: var(--agua-600) !important; }
+        .tono-cosecha { background: var(--cosecha-100) !important; color: var(--cosecha-600) !important; }
+        .tono-alerta  { background: var(--alerta-100) !important; color: var(--alerta-600) !important; border-color: var(--alerta-200) !important; }
+        .tono-neutro  { background: var(--neutro-100) !important; color: var(--texto-2) !important; }
 
         /* ---------- Estructura: barra lateral + contenido ---------- */
         .at-app { display: flex; min-height: 100vh; }
@@ -416,14 +443,17 @@
             to   { transform: scaleX(1); }
         }
         .panel-form > .huerto-hero::after { display: none; }
+        .panel-form > .huerto-hero h1,
         .panel-form > .huerto-hero h4 {
             display: flex;
             align-items: center;
             gap: .1rem;
             font-weight: 600 !important;
             font-size: 1.3rem;
+            letter-spacing: -.015em;
             color: var(--texto);
         }
+        .panel-form > .huerto-hero h1 > i,
         .panel-form > .huerto-hero h4 > i {
             width: 38px;
             height: 38px;
@@ -448,6 +478,10 @@
         .btn.rounded-pill { border-radius: var(--radio-sm) !important; }
         .btn:not(.btn-sm):not(.btn-lg):not(.rounded-circle) { padding-top: .58rem; padding-bottom: .58rem; }
         .btn:active { transform: scale(.97); }
+        /* Foco visible también en los botones propios (btn-huerto, btn-agua, btn-cosecha), que no traen anillo de Bootstrap */
+        .btn:focus-visible { outline: 2px solid var(--at-700); outline-offset: 2px; }
+        .huerto-hero:not(.rounded-0) .btn:focus-visible,
+        .huerto-hero:not(.rounded-0) a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         .btn-huerto {
             background: var(--at-600);
             color: #fff;
@@ -606,7 +640,7 @@
             font-size: .9rem;
         }
         .alert-success { background: var(--at-50); border-color: #cfe6bd; color: var(--at-900); }
-        .alert-danger { background: var(--alerta-100); border-color: #f2c9c3; color: #7d2118; }
+        .alert-danger { background: var(--alerta-100); border-color: var(--alerta-200); color: #7d2118; }
         .alert-warning { background: var(--cosecha-100); border-color: #f5d9b5; color: #7a3d06; }
         .alert-info { background: var(--agua-100); border-color: #c7dff3; color: #0f4675; }
         .alert-light { background: var(--fondo); border-color: var(--borde) !important; }
@@ -667,6 +701,8 @@
 </head>
 <body>
 
+<a href="#contenido" class="at-saltar visually-hidden-focusable">Saltar al contenido</a>
+
 <div class="at-app">
 
     <aside class="at-sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="menuPrincipal" aria-label="Menú principal">
@@ -714,12 +750,12 @@
             <div class="ms-auto d-flex align-items-center gap-2">
                 <span class="at-fecha d-none d-md-inline-flex"><i class="bi bi-calendar3"></i><?= ucfirst($fechaLarga) ?></span>
                 <?php if (! url_is('huerto/crear')): ?>
-                    <a href="<?= base_url('huerto/crear') ?>" class="btn btn-huerto btn-sm px-3 py-2"><i class="bi bi-plus-lg"></i><span class="d-none d-sm-inline ms-1">Nuevo cultivo</span></a>
+                    <a href="<?= base_url('huerto/crear') ?>" class="btn btn-huerto btn-sm px-3 py-2" aria-label="Nuevo cultivo"><i class="bi bi-plus-lg"></i><span class="d-none d-sm-inline ms-1">Nuevo cultivo</span></a>
                 <?php endif; ?>
             </div>
         </header>
 
-        <main class="at-contenido">
+        <main class="at-contenido" id="contenido" tabindex="-1">
             <?= $this->renderSection('contenido') ?>
         </main>
 
@@ -737,6 +773,9 @@
 <script>
     (function () {
         const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Los íconos de Bootstrap Icons acompañan texto: los lectores de pantalla los saltean
+        document.querySelectorAll('i.bi:not([aria-label]):not([role])').forEach(i => i.setAttribute('aria-hidden', 'true'));
 
         // Borde de la barra superior al hacer scroll
         const barra = document.getElementById('barraSuperior');

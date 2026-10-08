@@ -2,6 +2,140 @@
 
 <?= $this->section('estilos') ?>
 <style>
+    /* Banner: fecha, datos del huerto y semana de riego */
+    .banner {
+        background: var(--at-800);
+        color: #fff;
+        border-radius: calc(var(--radio) + 4px);
+        padding: 1.4rem;
+    }
+    .banner-fila { display: flex; align-items: center; gap: 1.1rem; }
+    .banner-texto { min-width: 0; }
+    .banner-fecha {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 74px;
+        flex-shrink: 0;
+        overflow: hidden;
+        border-radius: var(--radio-sm);
+        background: var(--superficie);
+        color: var(--texto);
+        text-align: center;
+        line-height: 1;
+    }
+    .banner-fecha .mes {
+        width: 100%;
+        padding: .3rem 0;
+        background: var(--at-300);
+        color: var(--at-900);
+        font-size: .7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+    }
+    .banner-fecha .dia {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2rem;
+        font-weight: 600;
+        padding: .35rem 0 .1rem;
+    }
+    .banner-fecha .semana { font-size: .72rem; color: var(--texto-2); padding-bottom: .45rem; }
+    .banner h1 { font-size: clamp(1.35rem, 2.2vw, 1.75rem); font-weight: 600; margin: 0 0 .45rem; }
+    .banner-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .3rem 1rem;
+        font-size: .85rem;
+        color: rgba(255, 255, 255, .78);
+    }
+    .banner-meta > * { display: inline-flex; align-items: center; gap: .4rem; }
+    .banner-meta a { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(255, 255, 255, .5); }
+    .banner-meta a:hover { color: #fff; border-bottom-color: #fff; }
+    .banner-meta .destacado { color: var(--at-300); font-weight: 600; }
+
+    .banner-semana {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: .4rem;
+        list-style: none;
+        margin: 1.25rem 0 0;
+        padding: 1.1rem 0 0;
+        border-top: 1px solid rgba(255, 255, 255, .14);
+    }
+    .banner-semana li {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .15rem;
+        padding: .5rem .25rem;
+        border-radius: var(--radio-sm);
+        background: rgba(255, 255, 255, .06);
+        text-align: center;
+        font-size: .75rem;
+        color: rgba(255, 255, 255, .78);
+    }
+    .banner-semana .nombre { text-transform: capitalize; }
+    .banner-semana .numero { font-family: 'Outfit', sans-serif; font-size: 1.05rem; font-weight: 600; color: #fff; }
+    .banner-semana .riegos { display: inline-flex; align-items: center; gap: .25rem; min-height: 1.1rem; }
+    .banner-semana .turno { color: var(--at-300); font-weight: 600; }
+    .banner-semana li.hoy { background: var(--superficie); color: var(--texto-2); }
+    .banner-semana li.hoy .numero { color: var(--texto); }
+    .banner-semana li.hoy .turno { color: var(--at-700); }
+    @media (max-width: 575.98px) {
+        .banner { padding: 1.1rem; }
+        .banner-fecha { width: 62px; }
+        .banner-semana { gap: .25rem; }
+        .banner-semana .palabra { display: none; }
+    }
+
+    /* Tareas del día */
+    .tareas {
+        background: var(--superficie);
+        border: 1px solid var(--borde);
+        border-radius: calc(var(--radio) + 2px);
+        box-shadow: var(--sombra-1);
+    }
+    .tareas-cabecera {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: .75rem;
+        padding: 1rem 1.25rem .75rem;
+    }
+    .tareas-cabecera h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+    .tareas-cabecera .fecha { font-size: .8rem; color: var(--texto-2); }
+    .tareas-lista { list-style: none; margin: 0; padding: 0; }
+    .tarea {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        padding: .7rem 1.25rem;
+        border-top: 1px solid var(--borde-suave);
+    }
+    .tarea-icono {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .tarea-texto { flex: 1; min-width: 0; }
+    .tarea-titulo { font-weight: 600; font-size: .9rem; }
+    .tarea-detalle { font-size: .8rem; color: var(--texto-2); }
+    .tarea .btn { font-size: .82rem; padding: .35rem .8rem; flex-shrink: 0; }
+    .tareas-vacio {
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        padding: .9rem 1.25rem 1.1rem;
+        border-top: 1px solid var(--borde-suave);
+        font-size: .875rem;
+        color: var(--texto-2);
+    }
+
     /* Resumen de riego y problemas */
     .resumen {
         background: var(--superficie);
@@ -198,7 +332,7 @@
     .estado-riego { background: var(--agua-100); color: var(--agua-600); }
     .estado-cosecha { background: var(--cosecha-100); color: var(--cosecha-600); }
     .estado-crecimiento { background: var(--at-50); color: var(--at-700); }
-    .estado-cosechado { background: #eef0eb; color: var(--texto-2); }
+    .estado-cosechado { background: var(--neutro-100); color: var(--texto-2); }
     .estado-riego .punto::after, .estado-cosecha .punto::after {
         content: "";
         position: absolute;
@@ -341,19 +475,65 @@
         return ['🌱', $tintes['verde']];
     };
 
-    $hora = (int) date('G');
-    $saludo = $hora < 13 ? 'Buen día' : ($hora < 20 ? 'Buenas tardes' : 'Buenas noches');
+    $diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    $mesesAnio = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    $hoyTexto = $diasSemana[(int) date('w')] . ' ' . date('j') . ' de ' . $mesesAnio[(int) date('n') - 1];
+    $horarios = \App\Models\CultivoModel::HORARIOS_RIEGO;
+
+    // Lo que hay que hacer hoy, ya ordenado por prioridad
+    $paraRegar = array_filter($cultivos ?? [], fn ($c) => $c['dias_proximo_riego'] === 0 && $c['estado'] !== 'Cosechado');
+    $paraCosechar = array_filter($cultivos ?? [], fn ($c) => $estadoDe($c) === 'cosecha');
+    $hayTareas = $paraRegar || $paraCosechar || ($riego['usa_turno'] && $hoyHayTurno && $riego['reservorio'] > 0) || ! empty($problemas['brotes']);
+
+    // Si hoy no hay nada, el riego más cercano
+    $proximoRiego = null;
+    foreach ($cultivos ?? [] as $c) {
+        if ($c['estado'] !== 'Cosechado' && ($proximoRiego === null || $c['dias_proximo_riego'] < $proximoRiego['dias_proximo_riego'])) {
+            $proximoRiego = $c;
+        }
+    }
+
+    // Semana que viene: riegos programados y días de turno de agua
+    $diasCortos = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+    $diasTurno = array_map(fn ($f) => $f->format('Y-m-d'), $riego['usa_turno'] ? ($riego['proximos_turnos'] ?? []) : []);
+    if ($riego['usa_turno'] && $hoyHayTurno) {
+        $diasTurno[] = $hoyFecha->format('Y-m-d');
+    }
+    $semana = [];
+    for ($d = 0; $d < 7; $d++) {
+        $fecha = (clone $hoyFecha)->modify("+{$d} day");
+        $riegos = 0;
+        foreach ($cultivos ?? [] as $c) {
+            $desde = max(0, (int) $c['dias_proximo_riego']);
+            $cada = max(1, (int) $c['frecuencia_riego_dias']);
+            if ($c['estado'] !== 'Cosechado' && $d >= $desde && ($d - $desde) % $cada === 0) {
+                $riegos++;
+            }
+        }
+        $semana[] = [
+            'nombre' => $d === 0 ? 'hoy' : $diasCortos[(int) $fecha->format('w')],
+            'largo'  => $diasSemana[(int) $fecha->format('w')] . ' ' . $fecha->format('j'),
+            'numero' => $fecha->format('j'),
+            'riegos' => $riegos,
+            'turno'  => in_array($fecha->format('Y-m-d'), $diasTurno, true),
+        ];
+    }
 ?>
 
-<section class="huerto-hero mb-4">
-    <div class="row align-items-center g-4">
-        <div class="col-lg-8">
-            <div class="d-flex flex-wrap gap-2 mb-3">
-                <a href="<?= base_url('huerto/configuracion') ?>" class="badge-fecha d-inline-flex align-items-center gap-2 text-decoration-none">
-                    <i class="bi bi-geo-alt"></i> <?= $zona ? esc($zona['nombre']) : 'Elegí la zona de tu huerto' ?>
-                </a>
+<section class="banner mb-4" aria-labelledby="nombreHuerto">
+    <div class="banner-fila">
+        <time class="banner-fecha" datetime="<?= $hoyFecha->format('Y-m-d') ?>">
+            <span class="mes"><?= mb_substr($mesesAnio[(int) date('n') - 1], 0, 3) ?></span>
+            <span class="dia"><?= date('j') ?></span>
+            <span class="semana"><?= $diasSemana[(int) date('w')] ?></span>
+        </time>
+        <div class="banner-texto">
+            <h1 id="nombreHuerto"><?= esc($huerto['nombre']) ?></h1>
+            <div class="banner-meta">
+                <a href="<?= base_url('huerto/configuracion') ?>"><i class="bi bi-geo-alt"></i><?= $zona ? esc($zona['nombre']) : 'Elegí la zona de tu huerto' ?></a>
+                <span><i class="bi bi-moisture"></i><?= esc($riego['metodo']['nombre']) ?></span>
                 <?php if ($riego['usa_turno']): ?>
-                    <span class="badge-fecha d-inline-flex align-items-center gap-2">
+                    <span class="<?= $hoyHayTurno ? 'destacado' : '' ?>">
                         <i class="bi bi-water"></i>
                         <?php if ($hoyHayTurno): ?>
                             Hoy hay turno de agua
@@ -365,29 +545,105 @@
                     </span>
                 <?php endif; ?>
             </div>
-            <h1 class="mb-2"><?= $saludo ?>. Así está <?= esc($huerto['nombre']) ?> hoy.</h1>
-            <p class="mb-0" style="color: rgba(255,255,255,.72)">
-                <?php
-                    $tareas = array_filter([
-                        $cuentas['riego'] ? $cuentas['riego'] . ' cultivo' . ($cuentas['riego'] > 1 ? 's' : '') . ' para regar' : '',
-                        $cuentas['cosecha'] ? $cuentas['cosecha'] . ' listo' . ($cuentas['cosecha'] > 1 ? 's' : '') . ' para cosechar' : '',
-                    ]);
-                ?>
-                <?= $tareas ? 'Tenés ' . implode(' y ', $tareas) . '.' : 'No hay tareas pendientes: todos los cultivos están al día.' ?>
-            </p>
-        </div>
-        <div class="col-lg-4 text-lg-end">
-            <a href="<?= base_url('huerto/crear') ?>" class="btn btn-huerto">
-                <i class="bi bi-plus-lg me-1"></i> Nuevo cultivo
-            </a>
         </div>
     </div>
+
+    <?php if (! empty($cultivos)): ?>
+        <ol class="banner-semana" aria-label="Riegos de los próximos 7 días">
+            <?php foreach ($semana as $i => $dia): ?>
+                <li class="<?= $i === 0 ? 'hoy' : '' ?>">
+                    <span class="visually-hidden"><?= $i === 0 ? 'Hoy, ' : '' ?><?= $dia['largo'] ?>: <?= $dia['riegos'] ?: 'sin' ?> riego<?= $dia['riegos'] == 1 ? '' : 's' ?><?= $dia['turno'] ? ', turno de agua' : '' ?></span>
+                    <span class="nombre" aria-hidden="true"><?= $dia['nombre'] ?></span>
+                    <span class="numero" aria-hidden="true"><?= $dia['numero'] ?></span>
+                    <span class="riegos" aria-hidden="true">
+                        <?php if ($dia['riegos']): ?>
+                            <i class="bi bi-droplet-fill"></i><?= $dia['riegos'] ?><span class="palabra"> riego<?= $dia['riegos'] == 1 ? '' : 's' ?></span>
+                        <?php else: ?>
+                            –
+                        <?php endif; ?>
+                    </span>
+                    <?php if ($dia['turno']): ?>
+                        <span class="turno" aria-hidden="true"><i class="bi bi-water"></i><span class="palabra"> turno</span></span>
+                    <?php endif; ?>
+                </li>
+            <?php endforeach; ?>
+        </ol>
+    <?php endif; ?>
 </section>
+
+<?php if (! empty($cultivos)): ?>
+    <section class="tareas mb-4" aria-labelledby="tituloTareas">
+        <div class="tareas-cabecera">
+            <h2 id="tituloTareas">Para hacer hoy</h2>
+            <span class="fecha"><?= ucfirst($hoyTexto) ?></span>
+        </div>
+
+        <?php if ($hayTareas): ?>
+            <ul class="tareas-lista">
+                <?php if ($riego['usa_turno'] && $hoyHayTurno && $riego['reservorio'] > 0): ?>
+                    <li class="tarea">
+                        <span class="tarea-icono tono-agua"><i class="bi bi-water"></i></span>
+                        <div class="tarea-texto">
+                            <div class="tarea-titulo">Llenar el reservorio</div>
+                            <div class="tarea-detalle">Hoy hay turno de agua: guardá hasta <?= $riego['reservorio'] ?> L para regar entre turnos.</div>
+                        </div>
+                    </li>
+                <?php endif; ?>
+
+                <?php foreach ($paraRegar as $planta): ?>
+                    <?php $horario = $horarios[$planta['horario_riego']] ?? $horarios['manana']; ?>
+                    <li class="tarea">
+                        <span class="tarea-icono tono-agua"><i class="bi bi-droplet-half"></i></span>
+                        <div class="tarea-texto">
+                            <div class="tarea-titulo">Regar <?= esc(mb_strtolower($planta['nombre_planta'])) ?><?= $planta['variedad'] ? ' ' . esc($planta['variedad']) : '' ?></div>
+                            <div class="tarea-detalle"><?= $litros($planta['litros_hoy']) ?> L · <?= esc(mb_strtolower($horario['nombre'])) ?> (<?= esc(implode(' y ', $horario['franjas'])) ?>)<?= $riego['usa_turno'] && ! $hoyHayTurno ? ' · con agua guardada' : '' ?></div>
+                        </div>
+                        <form action="<?= base_url('huerto/riego/' . $planta['id']) ?>" method="POST">
+                            <button type="submit" class="btn btn-agua" aria-label="Marcar <?= esc($planta['nombre_planta'], 'attr') ?> como regado"><i class="bi bi-check-lg me-1"></i>Regado</button>
+                        </form>
+                    </li>
+                <?php endforeach; ?>
+
+                <?php foreach ($paraCosechar as $planta): ?>
+                    <li class="tarea">
+                        <span class="tarea-icono tono-cosecha"><i class="bi bi-basket2"></i></span>
+                        <div class="tarea-texto">
+                            <div class="tarea-titulo">Cosechar <?= esc(mb_strtolower($planta['nombre_planta'])) ?><?= $planta['variedad'] ? ' ' . esc($planta['variedad']) : '' ?></div>
+                            <div class="tarea-detalle">Lista desde el <?= $planta['fecha_cosecha']->format('d/m') ?></div>
+                        </div>
+                        <a href="<?= base_url('huerto/cosechar/' . $planta['id']) ?>" class="btn btn-cosecha" aria-label="Registrar cosecha de <?= esc($planta['nombre_planta'], 'attr') ?>">Registrar</a>
+                    </li>
+                <?php endforeach; ?>
+
+                <?php if (! empty($problemas['brotes'])): ?>
+                    <li class="tarea">
+                        <span class="tarea-icono tono-alerta"><i class="bi bi-exclamation-octagon"></i></span>
+                        <div class="tarea-texto">
+                            <div class="tarea-titulo">Revisar las plantas</div>
+                            <div class="tarea-detalle">Varias huertas de la zona reportaron <?= esc(mb_strtolower(implode(', ', $problemas['brotes']))) ?>.</div>
+                        </div>
+                        <a href="<?= base_url('huerto/problemas') ?>" class="btn btn-light">Ver qué hacer</a>
+                    </li>
+                <?php endif; ?>
+            </ul>
+        <?php else: ?>
+            <div class="tareas-vacio">
+                <span class="tarea-icono tono-verde"><i class="bi bi-check2"></i></span>
+                <span>
+                    No hay tareas para hoy.
+                    <?php if ($proximoRiego): ?>
+                        Próximo riego: <?= esc(mb_strtolower($proximoRiego['nombre_planta'])) ?>, <?= $proximoRiego['dias_proximo_riego'] === 1 ? 'mañana' : 'en ' . $proximoRiego['dias_proximo_riego'] . ' días' ?>.
+                    <?php endif; ?>
+                </span>
+            </div>
+        <?php endif; ?>
+    </section>
+<?php endif; ?>
 
 <div class="row g-3 mb-4">
     <div class="col-6 col-lg-3">
         <div class="stat-card" data-filtro="todos" role="button" tabindex="0">
-            <div class="stat-icon" style="background: var(--at-50); color: var(--at-600)"><i class="bi bi-flower2"></i></div>
+            <div class="stat-icon tono-verde"><i class="bi bi-flower2"></i></div>
             <div>
                 <div class="stat-valor"><?= $cuentas['todos'] ?></div>
                 <div class="stat-label">Cultivos registrados</div>
@@ -396,7 +652,7 @@
     </div>
     <div class="col-6 col-lg-3">
         <div class="stat-card" data-filtro="riego" role="button" tabindex="0">
-            <div class="stat-icon" style="background: var(--agua-100); color: var(--agua-600)"><i class="bi bi-droplet-half"></i></div>
+            <div class="stat-icon tono-agua"><i class="bi bi-droplet-half"></i></div>
             <div>
                 <div class="stat-valor"><?= $cuentas['riego'] ?></div>
                 <div class="stat-label">Requieren riego</div>
@@ -405,7 +661,7 @@
     </div>
     <div class="col-6 col-lg-3">
         <div class="stat-card" data-filtro="cosecha" role="button" tabindex="0">
-            <div class="stat-icon" style="background: var(--cosecha-100); color: var(--cosecha-600)"><i class="bi bi-basket2"></i></div>
+            <div class="stat-icon tono-cosecha"><i class="bi bi-basket2"></i></div>
             <div>
                 <div class="stat-valor"><?= $cuentas['cosecha'] ?></div>
                 <div class="stat-label">Listos para cosechar</div>
@@ -414,7 +670,7 @@
     </div>
     <div class="col-6 col-lg-3">
         <div class="stat-card" data-filtro="cosechado" role="button" tabindex="0">
-            <div class="stat-icon" style="background: #eef0eb; color: var(--texto-2)"><i class="bi bi-check2-circle"></i></div>
+            <div class="stat-icon tono-neutro"><i class="bi bi-check2-circle"></i></div>
             <div>
                 <div class="stat-valor"><?= $cuentas['cosechado'] ?></div>
                 <div class="stat-label">Cosechados</div>
@@ -427,7 +683,7 @@
     <div class="<?= $problemas ? 'col-lg-7' : 'col-12' ?>">
         <div class="resumen">
             <div class="resumen-cabecera">
-                <h2><i class="bi bi-droplet-half" style="background: var(--agua-100); color: var(--agua-600)"></i>Riego de este mes</h2>
+                <h2><i class="bi bi-droplet-half tono-agua"></i>Riego de este mes</h2>
                 <span class="chip"><i class="bi bi-moisture"></i><?= esc($riego['metodo']['nombre']) ?></span>
             </div>
             <div class="resumen-cifra"><span data-contar><?= $litros($riego['litros_semana']) ?></span> <small>litros por semana</small></div>
@@ -459,9 +715,9 @@
         <div class="col-lg-5">
             <div class="resumen">
                 <div class="resumen-cabecera">
-                    <h2><i class="bi bi-bug" style="background: var(--alerta-100); color: var(--alerta-600)"></i>Problemas y plagas</h2>
+                    <h2><i class="bi bi-bug tono-alerta"></i>Problemas y plagas</h2>
                     <?php if ($problemas['brotes']): ?>
-                        <span class="chip" style="background: var(--alerta-100); border-color: #f2c9c3; color: var(--alerta-600)"><i class="bi bi-exclamation-octagon"></i>Alerta en tu zona</span>
+                        <span class="chip tono-alerta"><i class="bi bi-exclamation-octagon"></i>Alerta en tu zona</span>
                     <?php endif; ?>
                 </div>
                 <div class="resumen-cifra"><?= $problemas['sin_resolver'] ?> <small>sin resolver</small></div>
@@ -486,7 +742,7 @@
     <?php endif; ?>
 </div>
 
-<div id="cultivos" class="d-flex align-items-end justify-content-between mb-3" style="scroll-margin-top: 80px">
+<div id="cultivos" class="d-flex align-items-end justify-content-between mb-3">
     <div>
         <h2 class="seccion-titulo h5 mb-1">Mis cultivos</h2>
         <p class="text-muted small mb-0">Ordenados por lo que necesita atención primero.</p>
@@ -505,9 +761,9 @@
 <?php else: ?>
 
     <div class="filtros">
-        <div class="filtro-grupo" role="tablist" aria-label="Filtrar cultivos">
+        <div class="filtro-grupo" role="group" aria-label="Filtrar cultivos">
             <?php foreach (['todos' => 'Todos', 'riego' => 'Para regar', 'cosecha' => 'Para cosechar', 'crecimiento' => 'En crecimiento', 'cosechado' => 'Cosechados'] as $clave => $texto): ?>
-                <button type="button" class="filtro-btn <?= $clave === 'todos' ? 'activo' : '' ?>" data-filtro="<?= $clave ?>" role="tab" aria-selected="<?= $clave === 'todos' ? 'true' : 'false' ?>">
+                <button type="button" class="filtro-btn <?= $clave === 'todos' ? 'activo' : '' ?>" data-filtro="<?= $clave ?>" aria-pressed="<?= $clave === 'todos' ? 'true' : 'false' ?>">
                     <?= $texto ?> <span class="cuenta"><?= $cuentas[$clave] ?></span>
                 </button>
             <?php endforeach; ?>
@@ -547,7 +803,7 @@
                             </div>
                         </div>
                         <div class="dropdown">
-                            <button class="cultivo-menu" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Más acciones">
+                            <button class="cultivo-menu" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Más acciones: <?= esc($planta['nombre_planta'], 'attr') ?>">
                                 <i class="bi bi-three-dots"></i>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
@@ -574,7 +830,7 @@
                             <span>Día <strong><?= min($planta['dias_desde_siembra'], 999) ?></strong> de <?= (int) $planta['dias_cosecha_estimados'] ?></span>
                             <strong><?= $cosechado ? 100 : $planta['progreso'] ?>%</strong>
                         </div>
-                        <div class="ciclo-barra" role="progressbar" aria-valuenow="<?= $planta['progreso'] ?>" aria-valuemin="0" aria-valuemax="100" aria-label="Avance del ciclo">
+                        <div class="ciclo-barra" role="progressbar" aria-valuenow="<?= $cosechado ? 100 : $planta['progreso'] ?>" aria-valuemin="0" aria-valuemax="100" aria-label="Avance del ciclo">
                             <span style="--p: <?= $cosechado ? 100 : max(2, $planta['progreso']) ?>%"></span>
                         </div>
                         <div class="ciclo-nota">
@@ -623,10 +879,10 @@
                     <?php if (! $cosechado): ?>
                         <div class="cultivo-acciones">
                             <form action="<?= base_url('huerto/riego/' . $planta['id']) ?>" method="POST">
-                                <button type="submit" class="btn <?= $planta['alerta_riego'] ? 'btn-agua' : 'btn-light' ?>"><i class="bi bi-droplet-fill me-1"></i>Regar</button>
+                                <button type="submit" class="btn <?= $planta['alerta_riego'] ? 'btn-agua' : 'btn-light' ?>" aria-label="Regar <?= esc($planta['nombre_planta'], 'attr') ?>"><i class="bi bi-droplet-fill me-1"></i>Regar</button>
                             </form>
                             <?php if ($planta['alerta_cosecha'] || isset($kgCosechados[$planta['id']])): ?>
-                                <a href="<?= base_url('huerto/cosechar/' . $planta['id']) ?>" class="btn btn-cosecha"><i class="bi bi-basket2 me-1"></i>Cosechar</a>
+                                <a href="<?= base_url('huerto/cosechar/' . $planta['id']) ?>" class="btn btn-cosecha" aria-label="Cosechar <?= esc($planta['nombre_planta'], 'attr') ?>"><i class="bi bi-basket2 me-1"></i>Cosechar</a>
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
@@ -681,7 +937,7 @@
             botones.forEach(b => {
                 const activo = b.dataset.filtro === clave;
                 b.classList.toggle('activo', activo);
-                b.setAttribute('aria-selected', activo);
+                b.setAttribute('aria-pressed', activo);
             });
             aplicar();
         };
