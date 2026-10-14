@@ -509,10 +509,6 @@
 
     // Semana que viene: riegos programados y días de turno de agua
     $diasCortos = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
-    $diasTurno = array_map(fn ($f) => $f->format('Y-m-d'), $riego['usa_turno'] ? ($riego['proximos_turnos'] ?? []) : []);
-    if ($riego['usa_turno'] && $hoyHayTurno) {
-        $diasTurno[] = $hoyFecha->format('Y-m-d');
-    }
     $semana = [];
     for ($d = 0; $d < 7; $d++) {
         $fecha = (clone $hoyFecha)->modify("+{$d} day");
@@ -529,7 +525,7 @@
             'largo'  => $diasSemana[(int) $fecha->format('w')] . ' ' . $fecha->format('j'),
             'numero' => $fecha->format('j'),
             'riegos' => $riegos,
-            'turno'  => in_array($fecha->format('Y-m-d'), $diasTurno, true),
+            'turno'  => ! empty($riego['usa_turno']) && (isset($plan) ? $plan->esDiaDeTurno($fecha) : false),
         ];
     }
 ?>

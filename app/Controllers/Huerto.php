@@ -22,17 +22,17 @@ class Huerto extends BaseController
         $cultivos = $model->findAll();
         $plan = $this->planRiego();
 
-        $hoy = new \DateTime();
+        $hoy = (new \DateTime())->setTime(0, 0);
 
         foreach ($cultivos as &$planta) {
 
-            $fechaSiembra = new \DateTime($planta['fecha_siembra']);
+            $fechaSiembra = (new \DateTime($planta['fecha_siembra']))->setTime(0, 0);
             $fechaCosecha = clone $fechaSiembra;
             $fechaCosecha->modify('+' . $planta['dias_cosecha_estimados'] . ' days');
 
             $planta['alerta_cosecha'] = ($hoy >= $fechaCosecha);
 
-            $ultimoRiego = $planta['ultimo_riego'] ? new \DateTime($planta['ultimo_riego']) : clone $fechaSiembra;
+            $ultimoRiego = $planta['ultimo_riego'] ? (new \DateTime($planta['ultimo_riego']))->setTime(0, 0) : clone $fechaSiembra;
             $proximoRiego = clone $ultimoRiego;
             $proximoRiego->modify('+' . $planta['frecuencia_riego_dias'] . ' days');
 
@@ -44,7 +44,7 @@ class Huerto extends BaseController
             $planta['dias_desde_siembra'] = $diasDesdeSiembra;
             $planta['progreso'] = min(100, (int) round($diasDesdeSiembra * 100 / $diasCiclo));
             $planta['fecha_cosecha'] = $fechaCosecha;
-            $planta['dias_proximo_riego'] = $planta['alerta_riego'] ? 0 : (int) (clone $hoy)->setTime(0, 0)->diff((clone $proximoRiego)->setTime(0, 0))->days;
+            $planta['dias_proximo_riego'] = $planta['alerta_riego'] ? 0 : (int) $hoy->diff($proximoRiego)->days;
 
             // Litros ajustados al mes y al método de riego del huerto
             $planta['litros_hoy'] = $plan->litrosAplicar((float) $planta['cantidad_riego_litros'], $hoy);
@@ -54,6 +54,7 @@ class Huerto extends BaseController
         $datos['zona'] = $this->zonaDelHuerto();
         $datos['huerto'] = $this->huerto();
         $datos['riego'] = $plan->resumen($this->cultivosActivos(), $hoy);
+        $datos['plan'] = $plan;
         $datos['hoyHayTurno'] = $plan->esDiaDeTurno($hoy);
         $datos['problemas'] = $this->resumenProblemas();
         $datos['kgCosechados'] = db_connect()->tableExists('cosechas') ? (new CosechaModel())->kgPorCultivo() : [];
@@ -216,12 +217,12 @@ class Huerto extends BaseController
         $litrosPlanta = (float) $planta['cantidad_riego_litros'];
 
         $frecuencia = max(1, (int) $planta['frecuencia_riego_dias']);
-        $ultimoRiego = new \DateTime($planta['ultimo_riego'] ?? 'now');
+        $ultimoRiego = (new \DateTime($planta['ultimo_riego'] ?? 'now'))->setTime(0, 0);
 
         $proximoRiego = clone $ultimoRiego;
         $proximoRiego->modify('+' . $frecuencia . ' days');
 
-        $fechaCosecha = new \DateTime($planta['fecha_siembra']);
+        $fechaCosecha = (new \DateTime($planta['fecha_siembra']))->setTime(0, 0);
         $fechaCosecha->modify('+' . $planta['dias_cosecha_estimados'] . ' days');
 
         // Próximos riegos programados hasta la cosecha (máximo 5 para mostrar), con los litros de ese mes

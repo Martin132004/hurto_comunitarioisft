@@ -22,7 +22,11 @@ class PlanRiego
     // Factor del mes: más de 1 en verano, menos de 1 en invierno (1 si no hay zona elegida)
     public function coeficiente(DateTimeInterface $fecha): float
     {
-        $coeficientes = array_map('floatval', explode(',', (string) ($this->zona['coef_riego_mensual'] ?? '')));
+        if (empty($this->zona['coef_riego_mensual'])) {
+            return 1.0;
+        }
+
+        $coeficientes = array_map('floatval', explode(',', (string) $this->zona['coef_riego_mensual']));
 
         return $coeficientes[(int) $fecha->format('n') - 1] ?? 1.0;
     }

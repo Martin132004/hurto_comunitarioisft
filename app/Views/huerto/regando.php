@@ -228,7 +228,7 @@
                         <?php if ($riegosEntreTurnos > 0): ?>
                             Esta planta necesita <?= $riegosEntreTurnos ?> riego(s) entre turnos: guardá unos <?= number_format($riegosEntreTurnos * $cantidad, 1, ',', '.') ?> L para ella.
                         <?php else: ?>
-                            Con regarla en cada turno alcanza.
+                            No necesitás guardar agua entre turnos: podés regarla en los días de turno según su frecuencia.
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
