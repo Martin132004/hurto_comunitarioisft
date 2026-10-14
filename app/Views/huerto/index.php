@@ -126,6 +126,7 @@
     .tarea-titulo { font-weight: 600; font-size: .9rem; }
     .tarea-detalle { font-size: .8rem; color: var(--texto-2); }
     .tarea .btn { font-size: .82rem; padding: .35rem .8rem; flex-shrink: 0; }
+    .tarea-hecha .tarea-titulo { color: var(--at-700); }
     .tareas-vacio {
         display: flex;
         align-items: center;
@@ -427,11 +428,17 @@
     $litros = fn ($valor) => number_format((float) $valor, 1, ',', '.');
     $hoyFecha = new \DateTime('today');
 
+    // Una sola regla para todo el panel: le toca riego si su próximo riego cae hoy o ya pasó.
+    // La usan la semana del banner, "Para hacer hoy", las tarjetas de arriba, el filtro y cada cultivo.
+    $necesitaRiego = fn (array $c): bool => $c['estado'] !== 'Cosechado' && $c['dias_proximo_riego'] === 0;
+    $regadoHoy = fn (array $c): bool => $c['estado'] !== 'Cosechado' && ! empty($c['ultimo_riego'])
+        && date('Y-m-d', strtotime($c['ultimo_riego'])) === date('Y-m-d');
+
     // Estado de cada cultivo, en orden de prioridad
-    $estadoDe = function (array $c): string {
+    $estadoDe = function (array $c) use ($necesitaRiego): string {
         if ($c['estado'] == 'Cosechado') { return 'cosechado'; }
         if ($c['alerta_cosecha']) { return 'cosecha'; }
-        if ($c['alerta_riego']) { return 'riego'; }
+        if ($necesitaRiego($c)) { return 'riego'; }
         return 'crecimiento';
     };
 
@@ -440,6 +447,8 @@
         $cuentas['todos']++;
         $cuentas[$estadoDe($c)]++;
     }
+    // Los que están para cosechar también cuentan si además les toca riego
+    $cuentas['riego'] = count(array_filter($cultivos ?? [], $necesitaRiego));
 
     // Lo urgente primero: regar, cosechar, en crecimiento y al final lo cosechado
     $orden = ['riego' => 0, 'cosecha' => 1, 'crecimiento' => 2, 'cosechado' => 3];
@@ -481,7 +490,12 @@
     $horarios = \App\Models\CultivoModel::HORARIOS_RIEGO;
 
     // Lo que hay que hacer hoy, ya ordenado por prioridad
-    $paraRegar = array_filter($cultivos ?? [], fn ($c) => $c['dias_proximo_riego'] === 0 && $c['estado'] !== 'Cosechado');
+    $paraRegar = array_filter($cultivos ?? [], $necesitaRiego);
+    $regadosHoy = array_filter($cultivos ?? [], $regadoHoy);
+    $nombresRegados = array_map(fn ($c) => esc(mb_strtolower($c['nombre_planta'])), $regadosHoy);
+    $listaRegados = count($nombresRegados) > 1
+        ? implode(', ', array_slice($nombresRegados, 0, -1)) . ' y ' . end($nombresRegados)
+        : implode('', $nombresRegados);
     $paraCosechar = array_filter($cultivos ?? [], fn ($c) => $estadoDe($c) === 'cosecha');
     $hayTareas = $paraRegar || $paraCosechar || ($riego['usa_turno'] && $hoyHayTurno && $riego['reservorio'] > 0) || ! empty($problemas['brotes']);
 
@@ -599,7 +613,7 @@
                             <div class="tarea-detalle"><?= $litros($planta['litros_hoy']) ?> L · <?= esc(mb_strtolower($horario['nombre'])) ?> (<?= esc(implode(' y ', $horario['franjas'])) ?>)<?= $riego['usa_turno'] && ! $hoyHayTurno ? ' · con agua guardada' : '' ?></div>
                         </div>
                         <form action="<?= base_url('huerto/riego/' . $planta['id']) ?>" method="POST">
-                            <button type="submit" class="btn btn-agua" aria-label="Marcar <?= esc($planta['nombre_planta'], 'attr') ?> como regado"><i class="bi bi-check-lg me-1"></i>Regado</button>
+                            <button type="submit" class="btn btn-agua" aria-label="Regar <?= esc($planta['nombre_planta'], 'attr') ?>"><i class="bi bi-droplet-fill me-1"></i>Regar</button>
                         </form>
                     </li>
                 <?php endforeach; ?>
@@ -625,12 +639,26 @@
                         <a href="<?= base_url('huerto/problemas') ?>" class="btn btn-light">Ver qué hacer</a>
                     </li>
                 <?php endif; ?>
+
+                <?php if ($regadosHoy): ?>
+                    <li class="tarea tarea-hecha">
+                        <span class="tarea-icono tono-verde"><i class="bi bi-check2-all"></i></span>
+                        <div class="tarea-texto">
+                            <div class="tarea-titulo">Ya regaste hoy</div>
+                            <div class="tarea-detalle"><?= ucfirst($listaRegados) ?>. No hace falta volver a regarlos hoy.</div>
+                        </div>
+                    </li>
+                <?php endif; ?>
             </ul>
         <?php else: ?>
             <div class="tareas-vacio">
                 <span class="tarea-icono tono-verde"><i class="bi bi-check2"></i></span>
                 <span>
-                    No hay tareas para hoy.
+                    <?php if ($regadosHoy): ?>
+                        Todo al día: ya regaste <?= $listaRegados ?>.
+                    <?php else: ?>
+                        No hay tareas para hoy.
+                    <?php endif; ?>
                     <?php if ($proximoRiego): ?>
                         Próximo riego: <?= esc(mb_strtolower($proximoRiego['nombre_planta'])) ?>, <?= $proximoRiego['dias_proximo_riego'] === 1 ? 'mañana' : 'en ' . $proximoRiego['dias_proximo_riego'] . ' días' ?>.
                     <?php endif; ?>
@@ -792,7 +820,7 @@
                     $proximo = 'En ' . $planta['dias_proximo_riego'] . ' días';
                 }
             ?>
-            <div class="col-sm-6 col-xl-4 cultivo-col" data-estado="<?= $estado ?>" data-texto="<?= esc(mb_strtolower($planta['nombre_planta'] . ' ' . $planta['variedad'])) ?>">
+            <div class="col-sm-6 col-xl-4 cultivo-col" data-estado="<?= $estado ?>" data-riego="<?= $necesitaRiego($planta) ? '1' : '0' ?>" data-texto="<?= esc(mb_strtolower($planta['nombre_planta'] . ' ' . $planta['variedad'])) ?>">
                 <article class="cultivo" data-estado="<?= $estado ?>" style="--tinte: <?= $tinte ?>">
                     <div class="cultivo-cabecera">
                         <div class="cultivo-avatar" aria-hidden="true"><?= $icono ?></div>
@@ -861,9 +889,12 @@
                         </dl>
                     <?php endif; ?>
 
-                    <?php $conTurno = $planta['alerta_riego'] && ! $cosechado && $riego['usa_turno'] && ! $hoyHayTurno; ?>
-                    <?php if ($conTurno || ! empty($problemas['por_cultivo'][$planta['id']]) || (! $cosechado && isset($kgCosechados[$planta['id']]))): ?>
+                    <?php $conTurno = $necesitaRiego($planta) && $riego['usa_turno'] && ! $hoyHayTurno; ?>
+                    <?php if ($conTurno || $regadoHoy($planta) || ! empty($problemas['por_cultivo'][$planta['id']]) || (! $cosechado && isset($kgCosechados[$planta['id']]))): ?>
                         <div class="cultivo-avisos">
+                            <?php if ($regadoHoy($planta)): ?>
+                                <span class="text-success fw-semibold"><i class="bi bi-check2-circle"></i>Regado hoy a las <?= date('H:i', strtotime($planta['ultimo_riego'])) ?></span>
+                            <?php endif; ?>
                             <?php if ($conTurno): ?>
                                 <span class="text-primary"><i class="bi bi-info-circle"></i>Hoy no hay turno: regá con agua guardada.</span>
                             <?php endif; ?>
@@ -879,7 +910,7 @@
                     <?php if (! $cosechado): ?>
                         <div class="cultivo-acciones">
                             <form action="<?= base_url('huerto/riego/' . $planta['id']) ?>" method="POST">
-                                <button type="submit" class="btn <?= $planta['alerta_riego'] ? 'btn-agua' : 'btn-light' ?>" aria-label="Regar <?= esc($planta['nombre_planta'], 'attr') ?>"><i class="bi bi-droplet-fill me-1"></i>Regar</button>
+                                <button type="submit" class="btn <?= $necesitaRiego($planta) ? 'btn-agua' : 'btn-light' ?>" aria-label="Regar <?= esc($planta['nombre_planta'], 'attr') ?>"><i class="bi bi-droplet-fill me-1"></i>Regar</button>
                             </form>
                             <?php if ($planta['alerta_cosecha'] || isset($kgCosechados[$planta['id']])): ?>
                                 <a href="<?= base_url('huerto/cosechar/' . $planta['id']) ?>" class="btn btn-cosecha" aria-label="Cosechar <?= esc($planta['nombre_planta'], 'attr') ?>"><i class="bi bi-basket2 me-1"></i>Cosechar</a>
@@ -902,6 +933,10 @@
 
 <?= $this->section('scripts') ?>
 <script>
+    // Si se vuelve al panel con "atrás" después de regar, el navegador muestra la copia guardada:
+    // se recarga para que la lista de tareas esté al día
+    window.addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
+
     (function () {
         const grilla = document.getElementById('grillaCultivos');
         if (!grilla) return;
@@ -916,7 +951,9 @@
             const texto = buscador.value.trim().toLowerCase();
             let visibles = 0;
             columnas.forEach(col => {
-                const pasa = (filtro === 'todos' || col.dataset.estado === filtro) && (!texto || col.dataset.texto.includes(texto));
+                // "Para regar" incluye a los que están para cosechar y además les toca riego
+                const enFiltro = filtro === 'todos' || (filtro === 'riego' ? col.dataset.riego === '1' : col.dataset.estado === filtro);
+                const pasa = enFiltro && (!texto || col.dataset.texto.includes(texto));
                 if (pasa) {
                     visibles++;
                     if (col.hidden) {
