@@ -102,14 +102,38 @@ class Huerto extends BaseController
 
         $model = new CultivoModel();
 
+        $nombre = trim((string) $this->request->getPost('nombre_planta'));
+        $litros = str_replace(',', '.', trim((string) $this->request->getPost('cantidad_riego_litros')));
+        $diasCosecha = (int) $this->request->getPost('dias_cosecha_estimados');
+        $frecuencia = (int) $this->request->getPost('frecuencia_riego_dias');
+        $horario = (string) $this->request->getPost('horario_riego');
+        $fechaSiembra = (string) $this->request->getPost('fecha_siembra');
+        $fecha = \DateTime::createFromFormat('!Y-m-d', $fechaSiembra);
+
+        if ($nombre === '') {
+            return redirect()->back()->withInput()->with('error', 'Poné el nombre de la planta.');
+        }
+        if (! $fecha || $fecha->format('Y-m-d') !== $fechaSiembra) {
+            return redirect()->back()->withInput()->with('error', 'Revisá la fecha de siembra.');
+        }
+        if ($diasCosecha < 1 || $frecuencia < 1) {
+            return redirect()->back()->withInput()->with('error', 'Los días para cosecha y la frecuencia de riego tienen que ser 1 o más.');
+        }
+        if (! is_numeric($litros) || $litros <= 0 || $litros > 999) {
+            return redirect()->back()->withInput()->with('error', 'Los litros por riego tienen que ser un número, por ejemplo 1,5.');
+        }
+        if (! array_key_exists($horario, CultivoModel::HORARIOS_RIEGO)) {
+            $horario = 'manana';
+        }
+
         $datos = [
-            'nombre_planta'          => $this->request->getPost('nombre_planta'),
-            'variedad'               => $this->request->getPost('variedad'),
-            'fecha_siembra'          => $this->request->getPost('fecha_siembra'),
-            'dias_cosecha_estimados' => $this->request->getPost('dias_cosecha_estimados'),
-            'frecuencia_riego_dias'  => $this->request->getPost('frecuencia_riego_dias'),
-            'horario_riego'          => $this->request->getPost('horario_riego'),
-            'cantidad_riego_litros'  => $this->request->getPost('cantidad_riego_litros'),
+            'nombre_planta'          => $nombre,
+            'variedad'               => trim((string) $this->request->getPost('variedad')),
+            'fecha_siembra'          => $fechaSiembra,
+            'dias_cosecha_estimados' => $diasCosecha,
+            'frecuencia_riego_dias'  => $frecuencia,
+            'horario_riego'          => $horario,
+            'cantidad_riego_litros'  => $litros,
             'estado'                 => 'En Crecimiento',
             'ultimo_riego'           => null
         ];
@@ -312,6 +336,14 @@ class Huerto extends BaseController
     {
         $model = new CultivoModel();
         $model->delete($id);
+
+        if (db_connect()->tableExists('siembras_planificadas')) {
+            db_connect()->table('siembras_planificadas')
+                ->where('cultivo_id', $id)
+                ->set('cultivo_id', null)
+                ->update();
+        }
+
         return redirect()->to('/');
     }
 

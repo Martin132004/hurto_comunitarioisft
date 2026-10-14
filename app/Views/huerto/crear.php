@@ -80,6 +80,9 @@
                         <div>Estás sembrando lo que planificaste en el plano 3D<?= $plan['plantas'] ? ' (' . (int) $plan['plantas'] . ' plantas)' : '' ?>. Revisá los datos y guardalo.<?= $plan['notas'] ? '<div class="small mt-1">' . esc($plan['notas']) . '</div>' : '' ?></div>
                     </div>
                 <?php endif; ?>
+                <?php if (session()->getFlashdata('error')): ?>
+                    <div class="alert alert-danger rounded-4" role="alert"><i class="bi bi-exclamation-circle me-1"></i> <?= esc(session()->getFlashdata('error')) ?></div>
+                <?php endif; ?>
                 <form id="formCultivo" action="<?= base_url('huerto/crear') ?>" method="POST">
                     <?php if ($plan): ?>
                         <input type="hidden" name="plan_id" value="<?= (int) $plan['id'] ?>">
@@ -87,7 +90,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label" for="campo_nombre_planta"><i class="bi bi-tag me-1"></i> Nombre de la Planta</label>
-                            <input type="text" id="campo_nombre_planta" name="nombre_planta" class="form-control" required placeholder="Ej. Tomate" list="listaEspecies" autocomplete="off" value="<?= esc($plan['especie'] ?? '') ?>">
+                            <input type="text" id="campo_nombre_planta" name="nombre_planta" class="form-control" required placeholder="Ej. Tomate" list="listaEspecies" autocomplete="off" value="<?= esc(old('nombre_planta', $plan['especie'] ?? '')) ?>">
                             <datalist id="listaEspecies">
                                 <?php foreach ($especies as $especie): ?>
                                     <option value="<?= esc($especie['nombre']) ?>">
@@ -96,22 +99,22 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="campo_variedad"><i class="bi bi-bookmark me-1"></i> Variedad (Opcional)</label>
-                            <input type="text" id="campo_variedad" name="variedad" class="form-control" placeholder="Ej. Perita" value="<?= esc($plan['variedad'] ?? '') ?>">
+                            <input type="text" id="campo_variedad" name="variedad" class="form-control" placeholder="Ej. Perita" value="<?= esc(old('variedad', $plan['variedad'] ?? '')) ?>">
                         </div>
                     </div>
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <label class="form-label" for="campo_fecha_siembra"><i class="bi bi-calendar-event me-1"></i> Fecha de Siembra</label>
-                            <input type="date" id="campo_fecha_siembra" aria-describedby="ayuda_fecha_siembra" name="fecha_siembra" class="form-control" value="<?= date('Y-m-d') ?>" required>
+                            <input type="date" id="campo_fecha_siembra" aria-describedby="ayuda_fecha_siembra" name="fecha_siembra" class="form-control" value="<?= esc(old('fecha_siembra', $plan['fecha'] ?? date('Y-m-d'))) ?>" required>
                             <div class="form-text" id="ayuda_fecha_siembra">Si viene de almácigo, poné la fecha de trasplante.</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="campo_dias_cosecha_estimados"><i class="bi bi-basket2 me-1"></i> Días para Cosecha</label>
-                            <input type="number" id="campo_dias_cosecha_estimados" name="dias_cosecha_estimados" class="form-control" min="1" required value="<?= esc($plan['dias_cosecha'] ?? '') ?>">
+                            <input type="number" id="campo_dias_cosecha_estimados" name="dias_cosecha_estimados" class="form-control" min="1" required value="<?= esc(old('dias_cosecha_estimados', $plan['dias_cosecha'] ?? '')) ?>">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="campo_frecuencia_riego_dias"><i class="bi bi-droplet me-1"></i> Frecuencia Riego (Días)</label>
-                            <input type="number" id="campo_frecuencia_riego_dias" name="frecuencia_riego_dias" class="form-control" min="1" required>
+                            <input type="number" id="campo_frecuencia_riego_dias" name="frecuencia_riego_dias" class="form-control" min="1" required value="<?= esc(old('frecuencia_riego_dias', '')) ?>">
                         </div>
                     </div>
                     <div class="row g-3 mb-4">
@@ -119,13 +122,13 @@
                             <label class="form-label" for="campo_horario_riego"><i class="bi bi-clock me-1"></i> Horario de Riego</label>
                             <select id="campo_horario_riego" name="horario_riego" class="form-control" required>
                                 <?php foreach ($horarios as $clave => $horario): ?>
-                                    <option value="<?= $clave ?>"><?= $horario['nombre'] ?> (<?= implode(' y ', $horario['franjas']) ?>)</option>
+                                    <option value="<?= $clave ?>" <?= old('horario_riego') === $clave ? 'selected' : '' ?>><?= $horario['nombre'] ?> (<?= implode(' y ', $horario['franjas']) ?>)</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="campo_cantidad_riego_litros"><i class="bi bi-cup-straw me-1"></i> Cantidad por Riego (Litros)</label>
-                            <input type="number" id="campo_cantidad_riego_litros" aria-describedby="ayuda_cantidad_riego" name="cantidad_riego_litros" class="form-control" step="0.1" min="0.1" required placeholder="Ej. 1.5">
+                            <input type="number" id="campo_cantidad_riego_litros" aria-describedby="ayuda_cantidad_riego" name="cantidad_riego_litros" class="form-control" step="0.1" min="0.1" required placeholder="Ej. 1.5" value="<?= esc(old('cantidad_riego_litros', '')) ?>">
                             <div class="form-text" id="ayuda_cantidad_riego">Lo que necesita la planta en primavera u otoño. El sistema lo ajusta según el mes y tu método de riego.</div>
                         </div>
                     </div>
