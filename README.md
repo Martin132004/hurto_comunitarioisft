@@ -47,13 +47,13 @@ Permite llevar una bitácora de cultivos, el historial de riego y un panel visua
 
 3. Crear la base de datos `huerto_db` en MySQL (vacía, sin tablas — las tablas las crea la migración).
 
-4. Ejecutar las migraciones para crear las tablas `cultivos`, `especies`, `zonas`, `huertos`, `problemas`, `reportes_problemas`, `riegos`, `cosechas`, `plano_elementos` y `siembras_planificadas`:
+4. Ejecutar las migraciones para crear las tablas `cultivos`, `especies`, `zonas`, `huertos`, `problemas`, `reportes_problemas`, `riegos`, `cosechas`, `plano_elementos`, `siembras_planificadas` y `usuarios`:
 
    ```bash
    php spark migrate
    ```
 
-5. Cargar el catálogo de zonas, especies y problemas (plagas y enfermedades) (se puede volver a ejecutar sin duplicar datos):
+5. Cargar el catálogo de zonas, especies y problemas (plagas y enfermedades) y el usuario inicial (se puede volver a ejecutar sin duplicar datos):
 
    ```bash
    php spark db:seed CatalogoSeeder
@@ -65,7 +65,13 @@ Permite llevar una bitácora de cultivos, el historial de riego y un panel visua
    php spark serve
    ```
 
-7. Abrir `http://localhost:8080` en el navegador.
+7. Abrir `http://localhost:8080` en el navegador e iniciar sesión con el usuario inicial:
+
+   | Usuario | Contraseña   |
+   |---------|--------------|
+   | `admin` | `huerta2026` |
+
+   Si la base ya estaba instalada, alcanza con `php spark migrate` y `php spark db:seed UsuariosSeeder`.
 
 ## Estructura del proyecto
 
@@ -78,7 +84,12 @@ app/
 ├── Database/Migrations/..._AgregarSistemaDeRiego.php → sistema de riego del huerto y ajuste mensual por zona
 ├── Database/Migrations/..._CrearTablasProblemas.php → catálogo de problemas y reportes de los huertos
 ├── Database/Migrations/..._CrearTablasRiegosYCosechas.php → historial de riegos y cosechas con kg
-├── Database/Seeds/CatalogoSeeder.php                → carga zonas, especies y problemas
+├── Database/Migrations/..._CrearTablaUsuarios.php   → usuarios que pueden entrar al sistema
+├── Database/Seeds/CatalogoSeeder.php                → carga zonas, especies, problemas y el usuario inicial
+├── Database/Seeds/UsuariosSeeder.php                → usuario inicial (admin)
+├── Filters/Autenticado.php                          → pide iniciar sesión en todo el sistema salvo el login
+├── Models/UsuarioModel.php                          → usuarios y verificación de contraseña
+├── Controllers/Auth.php                             → inicio y cierre de sesión
 ├── Database/Seeds/ZonasSeeder.php                   → zonas agroclimáticas y fechas de helada
 ├── Database/Seeds/EspeciesSeeder.php                → datos del catálogo de especies
 ├── Database/Seeds/ProblemasSeeder.php               → plagas, enfermedades y daños con su manejo
@@ -96,7 +107,8 @@ app/
 ├── Controllers/Problemas.php                        → reporte de problemas y plagas
 ├── Controllers/Reportes.php                         → reporte mensual y exportación a PDF
 └── Views/
-    ├── layout/template.php                          → plantilla base (navbar, Bootstrap, footer)
+    ├── layout/template.php                          → plantilla base (navbar, Bootstrap, footer, bienvenida)
+    ├── auth/login.php                               → inicio de sesión
     └── huerto/
         ├── index.php                                 → panel de alertas
         ├── crear.php                                  → formulario de alta con guía de cultivo

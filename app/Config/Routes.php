@@ -3,6 +3,11 @@
 use CodeIgniter\Router\RouteCollection;
 
 /** @var RouteCollection $routes */
+// Inicio y cierre de sesión (todo lo demás pide estar logueado, ver Config/Filters)
+$routes->get('login', 'Auth::login');
+$routes->post('login', 'Auth::login');
+$routes->post('salir', 'Auth::salir');
+
 // Ruta principal: Carga el panel de alertas
 $routes->get('/', 'Huerto::index');
 

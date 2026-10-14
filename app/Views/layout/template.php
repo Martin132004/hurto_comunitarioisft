@@ -48,63 +48,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="<?= base_url('css/agrotech-tokens.css') ?>" rel="stylesheet">
     <style>
-        :root {
-            /* Colores de la marca (tomados del logo) */
-            --at-900: #0a3a1f;
-            --at-800: #0f4d29;
-            --at-700: #17663a;
-            --at-600: #1f7d43;
-            --at-500: #39a33f;
-            --at-300: #8cc63f;
-            --at-100: #e8f4dc;
-            --at-50:  #f3f9ec;
-
-            --agua-600: #1769aa;
-            --agua-100: #e3f0fb;
-            --cosecha-600: #ab550a; /* antes #c2610c: oscurecido para llegar a 4.5:1 sobre --cosecha-100 */
-            --cosecha-100: #fdf0e1;
-            --alerta-600: #c0392b;
-            --alerta-100: #fbe9e7;
-            --alerta-200: #f2c9c3;
-            --neutro-100: #eef0eb;
-
-            --fondo: #f5f6f1;
-            --superficie: #ffffff;
-            --borde: #e2e6dd;
-            --borde-suave: #edf0e9;
-            --texto: #14211a;
-            --texto-2: #5d6b62;
-            --texto-3: #66726a; /* antes #8b978f: oscurecido para llegar a 4.5:1 sobre --fondo */
-
-            --radio: 14px;
-            --radio-sm: 10px;
-            --sombra-1: 0 1px 2px rgba(20, 33, 26, .05), 0 1px 1px rgba(20, 33, 26, .03);
-            --sombra-2: 0 10px 30px -14px rgba(20, 33, 26, .22), 0 2px 6px -2px rgba(20, 33, 26, .06);
-            --ease: cubic-bezier(.22, .9, .3, 1);
-            --ancho-lateral: 264px;
-
-            /* Nombres que usan los estilos propios de cada vista */
-            --huerto-verde: var(--at-600);
-            --huerto-verde-oscuro: var(--at-900);
-            --huerto-lima: var(--at-300);
-            --huerto-crema: var(--fondo);
-
-            /* Bootstrap con los colores del sistema */
-            --bs-body-font-family: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
-            --bs-body-color: var(--texto);
-            --bs-body-bg: var(--fondo);
-            --bs-border-color: var(--borde);
-            --bs-secondary-color: var(--texto-2);
-            --bs-success: #1f7d43;
-            --bs-success-rgb: 31, 125, 67;
-            --bs-primary: #1769aa;
-            --bs-primary-rgb: 23, 105, 170;
-            --bs-link-color: var(--at-700);
-            --bs-link-color-rgb: 23, 102, 58;
-            --bs-link-hover-color: var(--at-900);
-            --bs-link-hover-color-rgb: 10, 58, 31;
-        }
 
         /* El foco y los anclas no quedan tapados por la barra superior fija (64px) */
         html { scroll-behavior: smooth; scroll-padding-top: 80px; }
@@ -668,6 +613,12 @@
         a.text-success.fw-semibold > .bi-arrow-left { transition: transform .2s var(--ease); }
         a.text-success.fw-semibold:hover > .bi-arrow-left { transform: translateX(-3px); }
 
+        /* Mientras una pantalla cubre la página (bienvenida, riego), el contenido espera para animarse */
+        body:has([data-cubierta]:not(.saliendo)) .at-contenido > :not([data-cubierta]),
+        body:has([data-cubierta]:not(.saliendo)) .at-contenido > :not([data-cubierta]) * {
+            animation-play-state: paused;
+        }
+
         /* ---------- Animaciones de entrada ---------- */
         .at-contenido > *:not(.riego-overlay),
         .at-contenido > .row > [class*="col"] > *,
@@ -688,6 +639,125 @@
             to   { opacity: 1; transform: none; }
         }
 
+        /* ---------- Usuario de la sesión ---------- */
+        .at-usuario {
+            display: flex;
+            align-items: center;
+            gap: .65rem;
+            margin: 0 .75rem .75rem;
+            padding: .6rem .5rem .6rem .75rem;
+            border-top: 1px solid var(--borde-suave);
+        }
+        .at-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--at-100);
+            color: var(--at-800);
+            font-weight: 700;
+            font-size: .85rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .at-usuario .nombre { font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .at-usuario .rol { font-size: .74rem; color: var(--texto-2); }
+        .at-salir {
+            margin-left: auto;
+            width: 34px;
+            height: 34px;
+            border: 0;
+            border-radius: var(--radio-sm);
+            background: transparent;
+            color: var(--texto-2);
+            transition: background .2s, color .2s;
+        }
+        .at-salir:hover { background: var(--alerta-100); color: var(--alerta-600); }
+
+        /* ---------- Bienvenida al iniciar sesión ---------- */
+        .bienvenida {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.1rem;
+            padding: 1rem;
+            background: var(--at-800);
+            color: #fff;
+            cursor: pointer;
+            /* Respaldo: si el script no corre, se va sola a los 8 segundos */
+            animation: bienvenidaSale .6s var(--ease) 8s forwards;
+        }
+        .bienvenida.saliendo { animation: bienvenidaSale .6s var(--ease) forwards; }
+        .bienvenida .marca {
+            height: 92px;
+            animation: marcaBrota .9s var(--ease) both;
+        }
+        .bienvenida .saludo {
+            font-family: 'Outfit', var(--bs-body-font-family);
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            font-weight: 600;
+            letter-spacing: -.02em;
+            margin: 0;
+            animation: textoSube .6s var(--ease) both .45s;
+        }
+        .bienvenida .detalle {
+            font-size: .9rem;
+            color: rgba(255, 255, 255, .75);
+            margin: -.6rem 0 .6rem;
+            animation: textoSube .6s var(--ease) both .6s;
+        }
+        .bienvenida .progreso {
+            width: min(280px, 80vw);
+            animation: textoSube .6s var(--ease) both .75s;
+        }
+        .bienvenida .progreso-cabecera {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: .5rem;
+            font-size: .8rem;
+            color: rgba(255, 255, 255, .78);
+        }
+        .bienvenida .porcentaje {
+            font-family: 'Geist Mono', ui-monospace, monospace;
+            font-weight: 600;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+        .bienvenida .carga {
+            height: 6px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, .14);
+            overflow: hidden;
+        }
+        .bienvenida .carga span {
+            display: block;
+            height: 100%;
+            width: 100%;
+            border-radius: inherit;
+            background: var(--at-300);
+            transform: scaleX(0);
+            transform-origin: left;
+        }
+        .bienvenida.completa .paso { color: var(--at-300); font-weight: 600; }
+        @keyframes marcaBrota {
+            from { opacity: 0; transform: translateY(14px) scale(.7) rotate(-10deg); }
+            to   { opacity: 1; transform: none; }
+        }
+        @keyframes textoSube {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: none; }
+        }
+        @keyframes bienvenidaSale {
+            to { opacity: 0; transform: translateY(-100%); visibility: hidden; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: .01ms !important;
@@ -702,6 +772,21 @@
 <body>
 
 <a href="#contenido" class="at-saltar visually-hidden-focusable">Saltar al contenido</a>
+
+<?php if (session()->getFlashdata('bienvenida')): ?>
+    <div class="bienvenida" id="bienvenida" data-cubierta>
+        <img src="<?= base_url('img/agrotech-marca-blanca.png') ?>" alt="" class="marca">
+        <p class="saludo">Hola, <?= esc(session('usuario_nombre')) ?></p>
+        <p class="detalle">Preparando <?= esc($huertoActual['nombre']) ?></p>
+        <div class="progreso">
+            <div class="progreso-cabecera">
+                <span class="paso" id="bienvenidaPaso" role="status">Iniciando sesión…</span>
+                <span class="porcentaje" id="bienvenidaPorcentaje" aria-hidden="true">0 %</span>
+            </div>
+            <div class="carga" role="progressbar" aria-label="Cargando el sistema" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bienvenidaBarra"><span></span></div>
+        </div>
+    </div>
+<?php endif; ?>
 
 <div class="at-app">
 
@@ -733,6 +818,19 @@
                 </div>
                 <div class="zona"><i class="bi bi-geo-alt me-1"></i><?= $zonaActual ? esc($zonaActual['nombre']) : 'Elegí la zona del huerto' ?></div>
             </a>
+
+            <?php if (session('usuario_id')): ?>
+                <div class="at-usuario">
+                    <span class="at-avatar" aria-hidden="true"><?= esc(mb_strtoupper(mb_substr(session('usuario_nombre'), 0, 1))) ?></span>
+                    <div style="min-width: 0">
+                        <div class="nombre"><?= esc(session('usuario_nombre')) ?></div>
+                        <div class="rol">Sesión iniciada</div>
+                    </div>
+                    <form action="<?= base_url('salir') ?>" method="POST" class="ms-auto">
+                        <button type="submit" class="at-salir" aria-label="Cerrar sesión" title="Cerrar sesión"><i class="bi bi-box-arrow-right"></i></button>
+                    </form>
+                </div>
+            <?php endif; ?>
         </div>
     </aside>
 
@@ -777,15 +875,82 @@
         // Los íconos de Bootstrap Icons acompañan texto: los lectores de pantalla los saltean
         document.querySelectorAll('i.bi:not([aria-label]):not([role])').forEach(i => i.setAttribute('aria-hidden', 'true'));
 
+        // Bienvenida: la barra avanza por etapas, como una carga real, y al completarse se va.
+        // Se puede saltear con un clic o Escape.
+        const bienvenida = document.getElementById('bienvenida');
+        if (bienvenida) {
+            const barra = document.getElementById('bienvenidaBarra');
+            const relleno = barra.querySelector('span');
+            const textoPaso = document.getElementById('bienvenidaPaso');
+            const textoPorcentaje = document.getElementById('bienvenidaPorcentaje');
+
+            // [milisegundos, porcentaje]: tramos rápidos y pausas cortas
+            const tramos = [[0, 0], [600, 12], [1100, 19], [1900, 41], [2400, 47], [3200, 68], [3700, 74], [4400, 92], [4900, 100]];
+            const pasos = [
+                [0,   'Iniciando sesión…'],
+                [15,  'Cargando cultivos…'],
+                [42,  'Calculando el riego del mes…'],
+                [70,  'Revisando turnos de agua…'],
+                [90,  'Buscando alertas y plagas…'],
+                [100, 'Listo'],
+            ];
+            const duracion = tramos[tramos.length - 1][0];
+            const suave = t => 1 - Math.pow(1 - t, 2);
+            let inicio = null;
+            let terminado = false;
+
+            const porcentajeEn = ms => {
+                for (let i = 1; i < tramos.length; i++) {
+                    const [t0, p0] = tramos[i - 1];
+                    const [t1, p1] = tramos[i];
+                    if (ms <= t1) return p0 + (p1 - p0) * suave((ms - t0) / (t1 - t0));
+                }
+                return 100;
+            };
+
+            const quitar = () => {
+                if (terminado) return;
+                terminado = true;
+                bienvenida.classList.add('saliendo');
+                document.dispatchEvent(new Event('cubierta:sale'));
+            };
+            bienvenida.addEventListener('animationend', e => { if (e.animationName === 'bienvenidaSale') bienvenida.remove(); });
+            bienvenida.addEventListener('click', quitar);
+            document.addEventListener('keydown', e => { if (e.key === 'Escape') quitar(); });
+
+            const avanzar = ahora => {
+                if (terminado) return;
+                if (inicio === null) inicio = ahora;
+                const ms = ahora - inicio;
+                const valor = Math.min(100, Math.round(porcentajeEn(ms)));
+
+                relleno.style.transform = `scaleX(${valor / 100})`;
+                textoPorcentaje.textContent = valor + ' %';
+                barra.setAttribute('aria-valuenow', valor);
+                const paso = pasos.filter(([desde]) => valor >= desde).pop()[1];
+                if (textoPaso.textContent !== paso) textoPaso.textContent = paso;
+
+                if (ms < duracion) {
+                    requestAnimationFrame(avanzar);
+                } else {
+                    bienvenida.classList.add('completa');
+                    setTimeout(quitar, 600);
+                }
+            };
+            // Empieza cuando ya apareció el logo
+            setTimeout(() => requestAnimationFrame(avanzar), 500);
+        }
+
         // Borde de la barra superior al hacer scroll
         const barra = document.getElementById('barraSuperior');
         const marcarBarra = () => barra.classList.toggle('con-sombra', window.scrollY > 4);
         window.addEventListener('scroll', marcarBarra, { passive: true });
         marcarBarra();
 
-        // Los números de las tarjetas cuentan desde cero al cargar ("12,5 kg", "Cada 3", "80 %")
+        // Los números de las tarjetas cuentan desde cero al cargar ("12,5 kg", "Cada 3", "80 %").
+        // Si una pantalla cubre la página (bienvenida, riego), esperan a que se vaya.
         const formato = (valor, decimales) => valor.toLocaleString('es-AR', { minimumFractionDigits: decimales, maximumFractionDigits: decimales });
-        document.querySelectorAll('.stat-valor, .plan-dato .valor, [data-contar]').forEach(el => {
+        const contarNumeros = () => document.querySelectorAll('.stat-valor, .plan-dato .valor, [data-contar]').forEach(el => {
             if (reducido || el.children.length) return;
             const partes = el.textContent.trim().match(/^(\D*?)(\d[\d.]*(?:,\d+)?)(.*)$/);
             if (!partes) return;
@@ -803,6 +968,11 @@
             };
             requestAnimationFrame(paso);
         });
+        if (document.querySelector('[data-cubierta]')) {
+            document.addEventListener('cubierta:sale', contarNumeros, { once: true });
+        } else {
+            contarNumeros();
+        }
     })();
 </script>
 <?= $this->renderSection('scripts') ?>
