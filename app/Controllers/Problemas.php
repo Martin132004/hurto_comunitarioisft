@@ -17,6 +17,23 @@ class Problemas extends BaseController
     private const FOTO_MAX_KB = 8192;
     private const FOTO_TIPOS = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
 
+    // Todas las acciones usan estas tablas: sin migrar, se vuelve al panel con el aviso
+    public function _remap(string $metodo, ...$parametros)
+    {
+        $db = db_connect();
+        foreach (['problemas', 'reportes_problemas', 'zonas'] as $tabla) {
+            if (! $db->tableExists($tabla)) {
+                return redirect()->to('/')->with('error', 'Falta correr las migraciones: php spark migrate');
+            }
+        }
+
+        if (! method_exists($this, $metodo) || $metodo === '_remap' || ! (new \ReflectionMethod($this, $metodo))->isPublic()) {
+            throw PageNotFoundException::forPageNotFound();
+        }
+
+        return $this->{$metodo}(...$parametros);
+    }
+
     public function index()
     {
         $huerto = (new HuertoModel())->actual();
@@ -163,11 +180,13 @@ class Problemas extends BaseController
         $diagnostico = (string) $this->request->getPost('problema');
         $catalogo = (new ProblemaModel())->catalogo();
 
+        $problemaActualizado = $diagnostico === '' ? null : (array_key_exists($diagnostico, $catalogo) ? $diagnostico : $reporte['problema']);
+
         $reportes->update($id, [
             'respuesta'      => mb_substr($respuesta, 0, 4000),
             'respondido_por' => mb_substr($tecnico, 0, 100),
             'respondido_at'  => date('Y-m-d H:i:s'),
-            'problema'       => array_key_exists($diagnostico, $catalogo) ? $diagnostico : $reporte['problema'],
+            'problema'       => $problemaActualizado,
             'estado'         => $reporte['estado'] === 'resuelto' ? 'resuelto' : 'respondido',
         ]);
 
