@@ -61,6 +61,9 @@
         <?php if (session()->getFlashdata('mensaje')): ?>
             <div class="alert alert-success rounded-4"><i class="bi bi-check-circle me-1"></i> <?= esc(session()->getFlashdata('mensaje')) ?></div>
         <?php endif; ?>
+        <?php if (session()->getFlashdata('error')): ?>
+            <div class="alert alert-danger rounded-4" role="alert"><i class="bi bi-exclamation-circle me-1"></i> <?= esc(session()->getFlashdata('error')) ?></div>
+        <?php endif; ?>
 
         <div class="panel-form">
             <div class="huerto-hero rounded-0 py-4 px-4 px-md-5">

@@ -51,7 +51,8 @@ class Plano extends BaseController
     public function guardar()
     {
         $datos = $this->datosJson();
-        if ($datos === null) {
+        // Sin terreno y elementos como listas no se toca nada: tomarlos como vacíos borraría los canteros
+        if ($datos === null || ! is_array($datos['terreno'] ?? null) || ! is_array($datos['elementos'] ?? null)) {
             return $this->response->setStatusCode(400)->setJSON(['ok' => false, 'error' => 'Los datos enviados no son válidos.']);
         }
         $huertoModel = new HuertoModel();
@@ -84,7 +85,7 @@ class Plano extends BaseController
         $ids = [];
 
         foreach (array_slice((array) ($datos['elementos'] ?? []), 0, 300) as $elemento) {
-            $tipo = (string) ($elemento['tipo'] ?? '');
+            $tipo = is_array($elemento) ? $this->texto($elemento['tipo'] ?? '') : '';
             if (! isset(PlanoElementoModel::TIPOS[$tipo])) {
                 continue;
             }
@@ -92,7 +93,7 @@ class Plano extends BaseController
             $fila = [
                 'huerto_id'    => $huerto['id'],
                 'tipo'         => $tipo,
-                'nombre'       => mb_substr(trim((string) ($elemento['nombre'] ?? '')), 0, 60) ?: PlanoElementoModel::TIPOS[$tipo]['nombre'],
+                'nombre'       => mb_substr(trim($this->texto($elemento['nombre'] ?? '')), 0, 60) ?: PlanoElementoModel::TIPOS[$tipo]['nombre'],
                 'x'            => $numero($elemento['x'] ?? 0, 0, $ancho),
                 'z'            => $numero($elemento['z'] ?? 0, 0, $largo),
                 'ancho'        => $numero($elemento['ancho'] ?? 1, 0.2, 50),
@@ -111,7 +112,7 @@ class Plano extends BaseController
             }
 
             // La clave temporal del navegador queda asociada al id guardado
-            $ids[(string) ($elemento['clave'] ?? $id)] = (int) $id;
+            $ids[$this->texto($elemento['clave'] ?? $id)] = (int) $id;
         }
 
         // Los elementos que ya no están en el plano se borran con sus siembras planificadas
@@ -126,7 +127,7 @@ class Plano extends BaseController
         $plantables = (new PlanoElementoModel())->plantables($huerto['id']);
         $cultivos = new CultivoModel();
         foreach ((array) ($datos['ubicaciones'] ?? []) as $cultivoId => $clave) {
-            $canteroId = $clave === null ? null : ($ids[(string) $clave] ?? null);
+            $canteroId = $clave === null ? null : ($ids[$this->texto($clave)] ?? null);
             if ($cultivos->find((int) $cultivoId)) {
                 $cultivos->update((int) $cultivoId, ['cantero_id' => isset($plantables[$canteroId]) ? $canteroId : null]);
             }
@@ -147,15 +148,16 @@ class Plano extends BaseController
         $plantables = (new PlanoElementoModel())->plantables($huerto['id']);
 
         $canteroId = (int) ($datos['cantero_id'] ?? 0);
-        $especie = mb_substr(trim((string) ($datos['especie'] ?? '')), 0, 60);
-        $fecha = \DateTime::createFromFormat('!Y-m-d', (string) ($datos['fecha'] ?? ''));
+        $especie = mb_substr(trim($this->texto($datos['especie'] ?? '')), 0, 60);
+        $fechaTexto = $this->texto($datos['fecha'] ?? '');
+        $fecha = \DateTime::createFromFormat('!Y-m-d', $fechaTexto);
         $dias = (int) ($datos['dias_cosecha'] ?? 0);
         $plantas = (int) ($datos['plantas'] ?? 0);
 
         $error = match (true) {
             ! isset($plantables[$canteroId]) => 'Elegí un cantero guardado del plano.',
             $especie === ''                  => 'Escribí qué vas a sembrar.',
-            ! $fecha                         => 'Revisá la fecha de siembra.',
+            ! $fecha || $fecha->format('Y-m-d') !== $fechaTexto => 'Revisá la fecha de siembra.',
             $dias < 1 || $dias > 400         => 'Los días hasta la cosecha tienen que ser entre 1 y 400.',
             $plantas < 0 || $plantas > 5000  => 'Revisá la cantidad de plantas.',
             default                          => null,
@@ -169,11 +171,11 @@ class Plano extends BaseController
             'huerto_id'    => $huerto['id'],
             'cantero_id'   => $canteroId,
             'especie'      => $especie,
-            'variedad'     => mb_substr(trim((string) ($datos['variedad'] ?? '')), 0, 60) ?: null,
+            'variedad'     => mb_substr(trim($this->texto($datos['variedad'] ?? '')), 0, 60) ?: null,
             'fecha'        => $fecha->format('Y-m-d'),
             'dias_cosecha' => $dias,
             'plantas'      => $plantas ?: null,
-            'notas'        => mb_substr(trim((string) ($datos['notas'] ?? '')), 0, 255) ?: null,
+            'notas'        => mb_substr(trim($this->texto($datos['notas'] ?? '')), 0, 255) ?: null,
         ];
 
         $id = (int) ($datos['id'] ?? 0);
@@ -210,6 +212,12 @@ class Plano extends BaseController
         }
 
         return is_array($datos) ? $datos : null;
+    }
+
+    // Texto de un valor del JSON; una lista u objeto da '' en lugar de un error 500
+    private function texto($valor): string
+    {
+        return is_scalar($valor) ? (string) $valor : '';
     }
 
     // Cultivos en curso y los ya cosechados que estuvieron en un cantero (sirven para la rotación)

@@ -123,7 +123,7 @@
         flex-shrink: 0;
     }
     .tarea-texto { flex: 1; min-width: 0; }
-    .tarea-titulo { font-weight: 600; font-size: .9rem; }
+    .tarea-titulo { font-weight: 600; font-size: .9rem; overflow-wrap: anywhere; }
     .tarea-detalle { font-size: .8rem; color: var(--texto-2); }
     .tarea .btn { font-size: .82rem; padding: .35rem .8rem; flex-shrink: 0; }
     .tarea-hecha .tarea-titulo { color: var(--at-700); }

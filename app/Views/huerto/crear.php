@@ -90,7 +90,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label" for="campo_nombre_planta"><i class="bi bi-tag me-1"></i> Nombre de la Planta</label>
-                            <input type="text" id="campo_nombre_planta" name="nombre_planta" class="form-control" required placeholder="Ej. Tomate" list="listaEspecies" autocomplete="off" value="<?= esc(old('nombre_planta', $plan['especie'] ?? '')) ?>">
+                            <input type="text" id="campo_nombre_planta" name="nombre_planta" class="form-control" maxlength="100" required placeholder="Ej. Tomate" list="listaEspecies" autocomplete="off" value="<?= esc(old('nombre_planta', $plan['especie'] ?? '')) ?>">
                             <datalist id="listaEspecies">
                                 <?php foreach ($especies as $especie): ?>
                                     <option value="<?= esc($especie['nombre']) ?>">
@@ -99,7 +99,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="campo_variedad"><i class="bi bi-bookmark me-1"></i> Variedad (Opcional)</label>
-                            <input type="text" id="campo_variedad" name="variedad" class="form-control" placeholder="Ej. Perita" value="<?= esc(old('variedad', $plan['variedad'] ?? '')) ?>">
+                            <input type="text" id="campo_variedad" name="variedad" class="form-control" maxlength="100" placeholder="Ej. Perita" value="<?= esc(old('variedad', $plan['variedad'] ?? '')) ?>">
                         </div>
                     </div>
                     <div class="row g-3 mb-4">
@@ -110,11 +110,11 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="campo_dias_cosecha_estimados"><i class="bi bi-basket2 me-1"></i> Días para Cosecha</label>
-                            <input type="number" id="campo_dias_cosecha_estimados" name="dias_cosecha_estimados" class="form-control" min="1" required value="<?= esc(old('dias_cosecha_estimados', $plan['dias_cosecha'] ?? '')) ?>">
+                            <input type="number" id="campo_dias_cosecha_estimados" name="dias_cosecha_estimados" class="form-control" min="1" max="400" required value="<?= esc(old('dias_cosecha_estimados', $plan['dias_cosecha'] ?? '')) ?>">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="campo_frecuencia_riego_dias"><i class="bi bi-droplet me-1"></i> Frecuencia Riego (Días)</label>
-                            <input type="number" id="campo_frecuencia_riego_dias" name="frecuencia_riego_dias" class="form-control" min="1" required value="<?= esc(old('frecuencia_riego_dias', '')) ?>">
+                            <input type="number" id="campo_frecuencia_riego_dias" name="frecuencia_riego_dias" class="form-control" min="1" max="60" required value="<?= esc(old('frecuencia_riego_dias', '')) ?>">
                         </div>
                     </div>
                     <div class="row g-3 mb-4">

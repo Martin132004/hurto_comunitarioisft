@@ -104,8 +104,12 @@ class Huerto extends BaseController
 
         $nombre = trim((string) $this->request->getPost('nombre_planta'));
         $litros = str_replace(',', '.', trim((string) $this->request->getPost('cantidad_riego_litros')));
-        $diasCosecha = (int) $this->request->getPost('dias_cosecha_estimados');
-        $frecuencia = (int) $this->request->getPost('frecuencia_riego_dias');
+        $variedad = trim((string) $this->request->getPost('variedad'));
+        // ctype_digit antes del cast: (int) '60abc' daría 60 sin avisar
+        $diasTexto = trim((string) $this->request->getPost('dias_cosecha_estimados'));
+        $frecuenciaTexto = trim((string) $this->request->getPost('frecuencia_riego_dias'));
+        $diasCosecha = ctype_digit($diasTexto) ? (int) $diasTexto : 0;
+        $frecuencia = ctype_digit($frecuenciaTexto) ? (int) $frecuenciaTexto : 0;
         $horario = (string) $this->request->getPost('horario_riego');
         $fechaSiembra = (string) $this->request->getPost('fecha_siembra');
         $fecha = \DateTime::createFromFormat('!Y-m-d', $fechaSiembra);
@@ -113,11 +117,14 @@ class Huerto extends BaseController
         if ($nombre === '') {
             return redirect()->back()->withInput()->with('error', 'Poné el nombre de la planta.');
         }
+        if (mb_strlen($nombre) > 100 || mb_strlen($variedad) > 100) {
+            return redirect()->back()->withInput()->with('error', 'El nombre y la variedad pueden tener hasta 100 caracteres.');
+        }
         if (! $fecha || $fecha->format('Y-m-d') !== $fechaSiembra) {
             return redirect()->back()->withInput()->with('error', 'Revisá la fecha de siembra.');
         }
-        if ($diasCosecha < 1 || $frecuencia < 1) {
-            return redirect()->back()->withInput()->with('error', 'Los días para cosecha y la frecuencia de riego tienen que ser 1 o más.');
+        if ($diasCosecha < 1 || $diasCosecha > 400 || $frecuencia < 1 || $frecuencia > 60) {
+            return redirect()->back()->withInput()->with('error', 'Los días para cosecha van de 1 a 400 y la frecuencia de riego de 1 a 60, en números enteros.');
         }
         if (! is_numeric($litros) || $litros <= 0 || $litros > 999) {
             return redirect()->back()->withInput()->with('error', 'Los litros por riego tienen que ser un número, por ejemplo 1,5.');
@@ -128,7 +135,7 @@ class Huerto extends BaseController
 
         $datos = [
             'nombre_planta'          => $nombre,
-            'variedad'               => trim((string) $this->request->getPost('variedad')),
+            'variedad'               => $variedad,
             'fecha_siembra'          => $fechaSiembra,
             'dias_cosecha_estimados' => $diasCosecha,
             'frecuencia_riego_dias'  => $frecuencia,
@@ -179,6 +186,9 @@ class Huerto extends BaseController
         $fuente = array_key_exists((string) $post('fuente_agua'), HuertoModel::FUENTES_AGUA) ? $post('fuente_agua') : 'red';
         $modo = $post('turno_modo') === 'semana' ? 'semana' : 'intervalo';
         $referencia = \DateTime::createFromFormat('Y-m-d', (string) $post('turno_referencia'));
+        if ($referencia && $referencia->format('Y-m-d') !== $post('turno_referencia')) {
+            return redirect()->back()->withInput()->with('error', 'Revisá la fecha de referencia del turno.');
+        }
         $diasSemana = array_intersect(array_map('intval', (array) $post('turno_dias_semana')), array_keys(HuertoModel::DIAS_SEMANA));
 
         $datos = [
@@ -208,7 +218,7 @@ class Huerto extends BaseController
         $model = new CultivoModel();
         $planta = $model->find($id);
 
-        if (! $planta) {
+        if (! $planta || $planta['estado'] === 'Cosechado') {
             return redirect()->to('/');
         }
 
@@ -306,11 +316,12 @@ class Huerto extends BaseController
             ]);
         }
 
-        $fecha = \DateTime::createFromFormat('Y-m-d', (string) $this->request->getPost('fecha'));
+        $fechaTexto = (string) $this->request->getPost('fecha');
+        $fecha = \DateTime::createFromFormat('Y-m-d', $fechaTexto);
         $kg = str_replace(',', '.', trim((string) $this->request->getPost('kg')));
         $final = $this->request->getPost('final') === '1';
 
-        if (! $fecha || $fecha > new \DateTime() || $fecha->format('Y-m-d') < $planta['fecha_siembra']) {
+        if (! $fecha || $fecha->format('Y-m-d') !== $fechaTexto || $fecha > new \DateTime() || $fecha->format('Y-m-d') < $planta['fecha_siembra']) {
             return redirect()->back()->withInput()->with('error', 'Revisá la fecha: tiene que ser entre la siembra y hoy.');
         }
         if ($kg !== '' && (! is_numeric($kg) || $kg < 0 || $kg > 100000)) {

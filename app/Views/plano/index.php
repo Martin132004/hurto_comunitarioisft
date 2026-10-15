@@ -522,11 +522,12 @@
     'urls'         => [
         'guardar'    => base_url('huerto/plano/guardar'),
         'planificar' => base_url('huerto/plano/planificar'),
-        'eliminar'   => base_url('huerto/plano/planificar/{id}/eliminar'),
-        'sembrar'    => base_url('huerto/crear?plan={id}'),
-        'nuevo'      => base_url('huerto/crear?cantero={id}'),
-        'regar'      => base_url('huerto/riego/{id}'),
-        'cosechar'   => base_url('huerto/cosechar/{id}'),
+        // {id} va fuera de base_url(): adentro se codifica como %7Bid%7D y el JS no lo reemplaza
+        'eliminar'   => base_url('huerto/plano/planificar') . '/{id}/eliminar',
+        'sembrar'    => base_url('huerto/crear') . '?plan={id}',
+        'nuevo'      => base_url('huerto/crear') . '?cantero={id}',
+        'regar'      => base_url('huerto/riego') . '/{id}',
+        'cosechar'   => base_url('huerto/cosechar') . '/{id}',
         'problema'   => base_url('huerto/problemas/nuevo'),
     ],
 ], $json) ?></script>
