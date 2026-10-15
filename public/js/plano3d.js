@@ -118,7 +118,7 @@ function mesesEnZona(meses, especie) {
     return meses.map(m => (m - 1 + Number(ZONA.desfase_meses)) % 12 + 1);
 }
 
-// En un túnel las especies sensibles a la helada se pueden adelantar un mes
+// En un túnel las especies sensibles a la helada se pueden adelantar un mes (con aviso: no queda libre de heladas)
 function mesesPermitidos(especie, el) {
     const meses = mesesEnZona(especie.meses, especie);
     if (el && TIPOS[el.tipo].protege_helada && especie.sensible_helada) {
@@ -1050,8 +1050,13 @@ function analizar() {
             const sol = evaluarSol(o.especie, `${o.nombre} (${el.nombre})`, horas, fecha, el.media_sombra);
             if (sol) agregar(sol[0], sol[1], el.clave);
 
-            if (o.especie?.sensible_helada && enPeriodoDeHeladas(fecha) && !TIPOS[el.tipo].protege_helada) {
-                agregar('grave', `<b>Helada:</b> ${esc(o.nombre)} en ${esc(el.nombre)} no soporta heladas y para esta fecha todavía puede helar. Cubrilo de noche o pasalo a un túnel.`, el.clave);
+            if (o.especie?.sensible_helada && enPeriodoDeHeladas(fecha)) {
+                // Un túnel sin calefacción baja el riesgo pero no lo elimina
+                if (TIPOS[el.tipo].protege_helada) {
+                    agregar('info', `<b>Helada:</b> ${esc(o.nombre)} está en ${esc(el.nombre)}, que reduce el riesgo, pero en noches muy frías puede helar adentro. Sumá una manta antihelada si anuncian helada fuerte.`, el.clave);
+                } else {
+                    agregar('grave', `<b>Helada:</b> ${esc(o.nombre)} en ${esc(el.nombre)} no soporta heladas y para esta fecha todavía puede helar. Cubrilo de noche o pasalo a un túnel.`, el.clave);
+                }
             }
             if (reparo !== null && reparo < 0.5 && esAlta(o) && el.tipo !== 'tunel') {
                 agregar('alerta', `<b>Viento:</b> ${esc(o.nombre)} en ${esc(el.nombre)} es una planta alta sin reparo. Atala bien al tutor o poné una cortina rompeviento del lado del ${rumboTexto(estado.terreno.viento)}.`, el.clave);
@@ -1645,7 +1650,7 @@ function evaluarPlan(el, datos) {
     const protegido = TIPOS[el.tipo].protege_helada;
 
     if (meses.includes(mes)) {
-        agregar('ok', `Buena época: ${esc(especie.nombre)} se siembra en ${nombresMeses(meses)}${protegido && especie.sensible_helada ? ' (en túnel se puede adelantar)' : ''}.`);
+        agregar('ok', `Buena época: ${esc(especie.nombre)} se siembra en ${nombresMeses(meses)}${protegido && especie.sensible_helada ? ' (en túnel se puede adelantar, vigilando las heladas)' : ''}.`);
     } else {
         const proxima = proximaFechaBuena(especie, el, inicio);
         agregar('alerta', `Fuera de época: ${esc(especie.nombre)} se siembra en ${nombresMeses(meses)}.${proxima ? ` <a href="#" data-usar-fecha="${isoDe(proxima)}">Usar ${fechaCorta(proxima)}</a>` : ''}`);
@@ -1656,6 +1661,9 @@ function evaluarPlan(el, datos) {
         agregar('info', `Va con almácigo: sembralo en bandeja cerca del ${fechaCorta(almacigo)} para trasplantar en esta fecha.`);
     }
 
+    if (ZONA && especie.sensible_helada && protegido && enPeriodoDeHeladas(inicio)) {
+        agregar('info', `En ${esc(ZONA.nombre)} todavía puede helar: el túnel reduce el riesgo pero no lo elimina. Tené a mano una manta antihelada.`);
+    }
     if (ZONA && especie.sensible_helada && !protegido) {
         if (enPeriodoDeHeladas(inicio)) agregar('grave', `Riesgo de helada: en ${esc(ZONA.nombre)} la última helada suele ser a mediados de ${MESES[Number(ZONA.ultima_helada.slice(0, 2)) - 1]}. Sembrá más tarde o en un túnel.`);
         else if (fin > proximaPrimeraHelada(inicio)) agregar('alerta', `La cosecha (${fechaCorta(fin)}) cae después de la primera helada de la zona. Sembrá antes o usá una variedad más corta.`);

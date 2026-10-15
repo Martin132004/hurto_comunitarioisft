@@ -57,7 +57,7 @@ class ProblemasSeeder extends Seeder
                 'afecta' => 'Tomate, Papa, Berenjena',
                 'meses_riesgo' => '11,12,1,2,3,4',
                 'sintomas' => "Galerías transparentes (\"minas\") dentro de las hojas.\nFrutos con agujeritos y aserrín oscuro alrededor del cabito.\nBrotes de la punta comidos.",
-                'manejo' => "Sacá las hojas y frutos dañados, embolsalos y tiralos fuera del huerto: no los dejes en el suelo ni en el compost.\nSi conseguís, usá trampas de feromona para capturar las polillas.\nAplicá Bacillus thuringiensis (Bt) sobre los brotes; es biológico y no afecta a otros insectos.",
+                'manejo' => "Sacá las hojas y frutos dañados, embolsalos y tiralos fuera del huerto: no los dejes en el suelo ni en el compost.\nSi conseguís, usá trampas de feromona para capturar las polillas.\nAplicá Bacillus thuringiensis (Bt) sobre los brotes: es biológico y actúa sobre orugas, también las de mariposas útiles, así que usalo solo donde está la plaga y respetá el marbete.",
                 'prevencion' => "Al terminar la temporada, retirá todos los restos de tomate.\nArrancá las plantas de tomate o papa que nacen solas fuera de lugar.",
             ],
             [
@@ -73,7 +73,7 @@ class ProblemasSeeder extends Seeder
                 'afecta' => 'Asteráceas, Brasicáceas, Amarantáceas, Frutilla, Fabáceas (legumbres)',
                 'meses_riesgo' => '3,4,5,8,9,10',
                 'sintomas' => "Agujeros irregulares en las hojas, sobre todo en plantines.\nRastros brillantes de baba sobre las hojas y el suelo.\nEl daño aparece de un día para el otro, después de regar.",
-                'manejo' => "Juntalos a mano al anochecer o temprano, después de regar.\nPoné trampas: tejas, tablas o cáscaras de naranja boca abajo, y revisalas a la mañana.\nHacé barreras de ceniza o cáscara de huevo molida alrededor de los plantines.",
+                'manejo' => "Juntalos a mano al anochecer o temprano, después de regar.\nPoné trampas: tejas, tablas o cáscaras de naranja boca abajo, y revisalas a la mañana.\nLas barreras de cáscara de huevo o ceniza casi no los frenan; la ceniza además puede salinizar el suelo.",
                 'prevencion' => "Regá a la mañana y no al atardecer.\nNo dejes maderas ni restos húmedos pegados a los canteros.",
             ],
             [
@@ -97,7 +97,7 @@ class ProblemasSeeder extends Seeder
                 'afecta' => 'Tomate, Papa, Cebolla, Cucurbitáceas, Acelga',
                 'meses_riesgo' => '1,2,3,4',
                 'sintomas' => "Manchas marrones o negras en las hojas, a veces con anillos o borde amarillo.\nPelusa gris o violácea debajo de las hojas cuando hay humedad.\nAparece después de lluvias de verano o de regar mojando las hojas.",
-                'manejo' => "Sacá enseguida las hojas con manchas y sacalas del huerto.\nAplicá caldo bordelés (cobre), que se permite en huertas agroecológicas.\nDejá de mojar las hojas: regá al pie.",
+                'manejo' => "Sacá enseguida las hojas con manchas y sacalas del huerto.\nNo apliques cobre ante cualquier mancha: consultá al técnico para confirmar la enfermedad antes de usar caldo bordelés.\nDejá de mojar las hojas: regá al pie.",
                 'prevencion' => "Rotá los cultivos: no repitas tomate o papa en el mismo lugar.\nAtá las plantas para que las hojas no toquen el suelo.",
             ],
             [

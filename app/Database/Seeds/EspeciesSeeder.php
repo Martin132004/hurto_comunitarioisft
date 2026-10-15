@@ -47,7 +47,7 @@ class EspeciesSeeder extends Seeder
             [
                 'nombre' => 'Papa', 'sinonimos' => 'patata',
                 'familia' => 'Solanáceas', 'dias_cosecha' => 120, 'frecuencia_riego_dias' => 4, 'horario_riego' => 'manana', 'litros_riego' => 2,
-                'meses_almacigo' => '', 'meses_siembra' => '8,9,1,2', 'sensible_helada' => 0, 'tolerancia_sal' => 'Baja',
+                'meses_almacigo' => '', 'meses_siembra' => '8,9,1,2', 'sensible_helada' => 1, 'tolerancia_sal' => 'Baja',
                 'tipo_siembra' => 'Directa (tubérculo)', 'exposicion' => 'Sol pleno', 'distancia_cm' => 30, 'profundidad_cm' => 10,
                 'buenos_vecinos' => 'Haba, Poroto, Repollo', 'malos_vecinos' => 'Tomate, Zapallo, Pepino, Berenjena, Melón, Sandía',
                 'consejos' => "Hay dos épocas: papa temprana a fines de invierno y papa de segunda en verano.\nSi brota antes de la última helada, aporcá (arrimá tierra) para proteger los brotes.\nLas papas expuestas al sol se ponen verdes y no se comen.",
