@@ -10,6 +10,10 @@
     $mesesAnio = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
     $fechaLarga = $diasSemana[(int) date('w')] . ' ' . date('j') . ' de ' . $mesesAnio[(int) date('n') - 1];
 
+    // Emergencia climática en curso: se avisa en todas las pantallas
+    $emergenciaActiva = db_connect()->tableExists('emergencias') ? (new \App\Models\EmergenciaModel())->activa() : null;
+    $emergenciaTipo = $emergenciaActiva ? (\App\Libraries\PlanEmergencia::TIPOS[$emergenciaActiva['tipo']] ?? null) : null;
+
     // Menú lateral: [ruta, patrón para marcar activo, ícono, texto]
     $menu = [
         'Huerto' => [
@@ -17,6 +21,7 @@
             ['huerto/plano', 'huerto/plano', 'bi-box', 'Huerto 3D'],
             ['huerto/crear', 'huerto/crear', 'bi-plus-square', 'Nuevo cultivo'],
             ['huerto/problemas', 'huerto/problemas*', 'bi-bug', 'Problemas y plagas'],
+            ['huerto/emergencia', 'huerto/emergencia*', 'bi-exclamation-octagon', 'Emergencia climática'],
         ],
         'Gestión' => [
             ['huerto/reportes', 'huerto/reportes*', 'bi-file-earmark-bar-graph', 'Reportes'],
@@ -49,6 +54,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="<?= base_url('css/agrotech-tokens.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/emergencia.css') ?>" rel="stylesheet">
     <style>
 
         /* El foco y los anclas no quedan tapados por la barra superior fija (64px) */
@@ -847,6 +853,15 @@
             </div>
             <div class="ms-auto d-flex align-items-center gap-2">
                 <span class="at-fecha d-none d-md-inline-flex"><i class="bi bi-calendar3"></i><?= ucfirst($fechaLarga) ?></span>
+                <?php if ($emergenciaTipo): ?>
+                    <a href="<?= base_url('huerto/emergencia/' . $emergenciaActiva['id']) ?>" class="em-boton-top activa" aria-label="Emergencia en curso: <?= esc($emergenciaTipo['nombre'], 'attr') ?>">
+                        <span class="em-punto" aria-hidden="true"></span><span class="d-none d-sm-inline"><?= esc($emergenciaTipo['nombre']) ?></span>
+                    </a>
+                <?php elseif (! url_is('huerto/emergencia*')): ?>
+                    <a href="<?= base_url('huerto/emergencia') ?>" class="em-boton-top" aria-label="Alerta de clima: Zonda, granizo o helada">
+                        <i class="bi bi-exclamation-triangle-fill"></i><span class="d-none d-sm-inline">Alerta de clima</span>
+                    </a>
+                <?php endif; ?>
                 <?php if (! url_is('huerto/crear')): ?>
                     <a href="<?= base_url('huerto/crear') ?>" class="btn btn-huerto btn-sm px-3 py-2" aria-label="Nuevo cultivo"><i class="bi bi-plus-lg"></i><span class="d-none d-sm-inline ms-1">Nuevo cultivo</span></a>
                 <?php endif; ?>
@@ -854,6 +869,22 @@
         </header>
 
         <main class="at-contenido" id="contenido" tabindex="-1">
+            <?php if ($emergenciaTipo && ! url_is('huerto/emergencia*')): ?>
+                <?php
+                    // Mismo criterio que el plan: solo cuentan los pasos que el plan muestra hoy
+                    $pasosValidos = array_keys(\App\Libraries\PlanEmergencia::clavesValidas($emergenciaActiva));
+                    $pasosHechos = count(array_intersect(\App\Models\EmergenciaModel::lista($emergenciaActiva['pasos']), $pasosValidos));
+                ?>
+                <div class="em-franja" role="alert">
+                    <span class="em-punto" aria-hidden="true"></span>
+                    <div class="texto">
+                        <strong><i class="bi <?= $emergenciaTipo['icono'] ?> me-1" aria-hidden="true"></i>Emergencia en curso: <?= esc($emergenciaTipo['nombre']) ?></strong>
+                        <div><?= $pasosHechos ? $pasosHechos . ' paso' . ($pasosHechos > 1 ? 's' : '') . ' del plan hecho' . ($pasosHechos > 1 ? 's' : '') . '.' : 'Todavía no marcaste ningún paso del plan.' ?></div>
+                    </div>
+                    <a href="<?= base_url('huerto/emergencia/' . $emergenciaActiva['id']) ?>" class="btn btn-light btn-sm">Ver el plan</a>
+                    <a href="<?= base_url('huerto/emergencia/' . $emergenciaActiva['id'] . '/terminar') ?>" class="btn btn-outline-light btn-sm">Ya terminó</a>
+                </div>
+            <?php endif; ?>
             <?= $this->renderSection('contenido') ?>
         </main>
 

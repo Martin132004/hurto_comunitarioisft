@@ -109,7 +109,7 @@
                         <p class="small text-muted" id="ayudaOpciones">Si no estás seguro, dejá "No sé qué es": el técnico lo va a identificar.</p>
                         <div class="row g-3">
                             <div class="col-md-6 col-lg-4" data-problema="">
-                                <input type="radio" class="btn-check" name="problema" id="problema_ninguno" value="" <?= old('problema', '') === '' ? 'checked' : '' ?>>
+                                <input type="radio" class="btn-check" name="problema" id="problema_ninguno" value="" <?= old('problema', $problemaElegido ?? '') === '' ? 'checked' : '' ?>>
                                 <label class="opcion" for="problema_ninguno">
                                     <span class="titulo"><i class="bi bi-question-circle me-1"></i>No sé qué es</span>
                                     <div class="small text-muted mt-1">Contalo abajo y subí una foto.</div>
@@ -118,7 +118,7 @@
                             <?php foreach ($catalogo as $clave => $p): ?>
                                 <?php $tipo = $tipos[$p['tipo']] ?? $tipos['plaga']; ?>
                                 <div class="col-md-6 col-lg-4" data-problema="<?= esc($clave) ?>">
-                                    <input type="radio" class="btn-check" name="problema" id="problema_<?= esc($clave) ?>" value="<?= esc($clave) ?>" <?= old('problema') === $clave ? 'checked' : '' ?>>
+                                    <input type="radio" class="btn-check" name="problema" id="problema_<?= esc($clave) ?>" value="<?= esc($clave) ?>" <?= old('problema', $problemaElegido ?? '') === $clave ? 'checked' : '' ?>>
                                     <label class="opcion" for="problema_<?= esc($clave) ?>">
                                         <span class="titulo"><i class="bi <?= $tipo['icono'] ?> text-<?= $tipo['color'] ?> me-1"></i><?= esc($p['nombre']) ?></span>
                                         <ul class="small text-muted">

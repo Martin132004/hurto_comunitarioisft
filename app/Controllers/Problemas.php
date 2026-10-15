@@ -76,11 +76,15 @@ class Problemas extends BaseController
                 $posibles[$cultivo['id']] = array_keys(array_filter($catalogo, fn ($p) => ProblemaModel::afectaA($p, $especie)));
             }
 
+            $pedido = $this->request->getGet('problema');
+
             return view('problemas/nuevo', [
                 'catalogo'   => $catalogo,
                 'cultivos'   => $cultivos,
                 'posibles'   => $posibles,
                 'elegido'    => (int) $this->request->getGet('cultivo'),
+                // Problema ya marcado al llegar desde otra pantalla (por ejemplo, los daños de una emergencia)
+                'problemaElegido' => is_string($pedido) && isset($catalogo[$pedido]) ? $pedido : '',
                 'tipos'      => ProblemaModel::TIPOS,
                 'gravedades' => ReporteProblemaModel::GRAVEDADES,
             ]);

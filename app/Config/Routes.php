@@ -46,3 +46,12 @@ $routes->get('huerto/plano', 'Plano::index');
 $routes->post('huerto/plano/guardar', 'Plano::guardar');
 $routes->post('huerto/plano/planificar', 'Plano::planificar');
 $routes->post('huerto/plano/planificar/(:num)/eliminar', 'Plano::eliminarPlan/$1');
+
+// Emergencias climáticas: plan de contingencia, daños y reparación
+$routes->get('huerto/emergencia', 'Emergencia::index');
+$routes->post('huerto/emergencia', 'Emergencia::crear');
+$routes->get('huerto/emergencia/(:num)', 'Emergencia::ver/$1');
+$routes->post('huerto/emergencia/(:num)/paso', 'Emergencia::paso/$1');
+$routes->post('huerto/emergencia/(:num)/cancelar', 'Emergencia::cancelar/$1');
+$routes->get('huerto/emergencia/(:num)/terminar', 'Emergencia::terminar/$1');
+$routes->post('huerto/emergencia/(:num)/terminar', 'Emergencia::terminar/$1');
