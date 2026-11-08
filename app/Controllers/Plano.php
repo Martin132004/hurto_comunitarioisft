@@ -50,16 +50,7 @@ class Plano extends BaseController
         $terreno = $datos['terreno'] ?? [];
         $ancho = $numero($terreno['ancho'] ?? 12, 2, 200);
         $largo = $numero($terreno['largo'] ?? 10, 2, 200);
-        $camposTerreno = [
-            'plano_ancho'  => $ancho,
-            'plano_largo'  => $largo,
-            'norte_grados' => ((int) ($terreno['norte'] ?? 0) % 360 + 360) % 360,
-            'latitud'      => $numero($terreno['latitud'] ?? $huerto['latitud'], -60, 60),
-            'longitud'     => $numero($terreno['longitud'] ?? $huerto['longitud'], -180, 180),
-            'viento_desde' => isset($terreno['viento']) && $terreno['viento'] !== '' && $terreno['viento'] !== null
-                ? ((int) $terreno['viento'] % 360 + 360) % 360
-                : null,
-        ];
+        $camposTerreno = ['plano_ancho' => $ancho, 'plano_largo' => $largo];
 
         if ($huerto['id']) {
             $huertoModel->update($huerto['id'], $camposTerreno);
@@ -82,10 +73,9 @@ class Plano extends BaseController
                 'tipo'         => $tipo,
                 'nombre'       => mb_substr(trim($this->texto($elemento['nombre'] ?? '')), 0, 60) ?: PlanoElementoModel::TIPOS[$tipo]['nombre'],
                 'x'            => $numero($elemento['x'] ?? 0, 0, $ancho),
-                'z'            => $numero($elemento['z'] ?? 0, 0, $largo),
+                'y'            => $numero($elemento['y'] ?? 0, 0, $largo),
                 'ancho'        => $numero($elemento['ancho'] ?? 1, 0.2, 50),
                 'largo'        => $numero($elemento['largo'] ?? 1, 0.2, 100),
-                'alto'         => $numero($elemento['alto'] ?? 0.3, 0.02, 30),
                 'rotacion'     => ((int) ($elemento['rotacion'] ?? 0) % 360 + 360) % 360,
                 'media_sombra' => empty($elemento['media_sombra']) ? 0 : 1,
             ];

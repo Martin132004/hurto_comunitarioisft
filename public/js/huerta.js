@@ -21,7 +21,6 @@ export function fechaLocal(iso) {
     const [a, m, d] = String(iso).slice(0, 10).split('-').map(Number);
     return new Date(a, m - 1, d);
 }
-export const isoDe = f => `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}-${String(f.getDate()).padStart(2, '0')}`;
 export const sumarDias = (f, n) => { const r = new Date(f); r.setDate(r.getDate() + Math.round(n)); return r; };
 export const diasEntre = (desde, hasta) => Math.round((hasta - desde) / DIA);
 export const aMesDia = f => String(f.getMonth() + 1).padStart(2, '0') + '-' + String(f.getDate()).padStart(2, '0');

@@ -39,10 +39,6 @@ class HuertoModel extends Model
         'reservorio_litros',
         'plano_ancho',
         'plano_largo',
-        'norte_grados',
-        'latitud',
-        'longitud',
-        'viento_desde',
     ];
 
     protected $useTimestamps = true;
@@ -60,10 +56,6 @@ class HuertoModel extends Model
         'reservorio_litros' => 0,
         'plano_ancho'       => 12,
         'plano_largo'       => 10,
-        'norte_grados'      => 0,
-        'latitud'           => -31.5375,
-        'longitud'          => -68.5364,
-        'viento_desde'      => null,
     ];
 
     // Por ahora el sistema gestiona un solo huerto: devolvemos el primero (o valores por defecto)

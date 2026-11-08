@@ -38,16 +38,12 @@ const CULTIVOS = D.cultivos.map(c => {
 
 const prepararElemento = e => ({
     clave: 'e' + e.id, id: Number(e.id), tipo: e.tipo, nombre: e.nombre,
-    x: Number(e.x), z: Number(e.z), ancho: Number(e.ancho), largo: Number(e.largo), alto: Number(e.alto),
+    x: Number(e.x), y: Number(e.y), ancho: Number(e.ancho), largo: Number(e.largo),
     rotacion: Number(e.rotacion), media_sombra: Boolean(Number(e.media_sombra)),
 });
 
 const estado = {
-    // Norte, ubicación y viento no se editan acá, pero se mandan igual para no perderlos al guardar
-    terreno: {
-        ancho: Number(h.plano_ancho) || 12, largo: Number(h.plano_largo) || 10, norte: Number(h.norte_grados) || 0,
-        latitud: Number(h.latitud), longitud: Number(h.longitud), viento: h.viento_desde ?? null,
-    },
+    terreno: { ancho: Number(h.plano_ancho) || 12, largo: Number(h.plano_largo) || 10 },
     elementos: D.elementos.map(prepararElemento),
     // Cantero de cada cultivo: { id del cultivo: clave del elemento }
     ubicaciones: Object.fromEntries(D.cultivos.map(c => [c.id, c.cantero_id ? 'e' + c.cantero_id : null])),
@@ -181,27 +177,44 @@ function dibujarElemento(el) {
         forma += `<rect x="${-a / 2 - 0.12}" y="${-l / 2 - 0.12}" width="${a + 0.24}" height="${l + 0.24}" fill="none" stroke="#1b5e20" stroke-width="0.06" stroke-dasharray="0.2 0.12" rx="0.1"/>`;
     }
 
-    return `<g data-clave="${el.clave}" transform="translate(${r2(el.x)} ${r2(el.z)}) rotate(${el.rotacion})" style="cursor:grab">${forma}${plantas}</g>`;
+    return `<g data-clave="${el.clave}" transform="translate(${r2(el.x)} ${r2(el.y)}) rotate(${el.rotacion})" style="cursor:grab">${forma}${plantas}</g>`;
 }
 
-// Nombre del elemento arriba, con íconos de lo que hay que hacer hoy
-function rotulo(el) {
-    const lista = enCantero(el);
-    const iconos = (lista.some(c => c.regar) ? '💧' : '') + (lista.some(c => c.cosechar) ? '🧺' : '') + (lista.some(c => c.problemas > 0) ? '🐛' : '');
+// Nombres de los elementos, con íconos de lo que hay que hacer hoy. Cada nombre va arriba de su
+// elemento; si se pisa con otro ya puesto, prueba abajo y después cada vez más lejos hasta encontrar lugar.
+function rotulos(elementos) {
     const t = letra();
-    const y = Math.max(t, el.z - altoGirado(el) / 2 - t * 0.35);
-    return `<text x="${r2(el.x)}" y="${r2(y)}" font-size="${r2(t)}" text-anchor="middle" font-weight="600" fill="#22301f"
-        stroke="#fff" stroke-width="${r2(t * 0.28)}" stroke-linejoin="round" paint-order="stroke">${esc(el.nombre)}${iconos ? ' · ' + iconos : ''}</text>`;
+    const ocupados = []; // rectángulos [izquierda, arriba, derecha, abajo] de los nombres ya puestos
+    const choca = r => ocupados.some(o => r[0] < o[2] && r[2] > o[0] && r[1] < o[3] && r[3] > o[1]);
+
+    return elementos.map(el => {
+        const lista = enCantero(el);
+        const iconos = (lista.some(c => c.regar) ? '💧' : '') + (lista.some(c => c.cosechar) ? '🧺' : '') + (lista.some(c => c.problemas > 0) ? '🐛' : '');
+        const texto = el.nombre + (iconos ? ' · ' + iconos : '');
+        const mitadTexto = [...texto].length * t * 0.3; // ancho aproximado: media letra por carácter, a cada lado
+        const arriba = el.y - altoGirado(el) / 2 - t * 0.35, abajo = el.y + altoGirado(el) / 2 + t;
+        const lugares = [arriba, abajo];
+        for (let k = 1; k <= 6; k++) lugares.push(arriba - k * t * 1.1, abajo + k * t * 1.1);
+
+        const rect = y => [el.x - mitadTexto, y - t * 0.85, el.x + mitadTexto, y + t * 0.2];
+        const y = lugares.map(v => Math.max(t, v)).find(v => !choca(rect(v))) ?? Math.max(t, arriba);
+        ocupados.push(rect(y));
+
+        return `<text x="${r2(el.x)}" y="${r2(y)}" font-size="${r2(t)}" text-anchor="middle" font-weight="600" fill="#22301f"
+            stroke="#fff" stroke-width="${r2(t * 0.28)}" stroke-linejoin="round" paint-order="stroke">${esc(texto)}</text>`;
+    }).join('');
 }
+
+// Orden de dibujo: lo que está al ras del suelo primero y lo más alto al final, para que se vea encima
+const CAPAS = ['camino', 'acequia', 'tablon', 'cantero', 'maceta', 'compostera', 'tanque', 'tunel', 'pared', 'cortina', 'arbol'];
 
 function dibujar() {
     const { ancho, largo } = estado.terreno;
     const t = letra();
     let grilla = '';
     for (let x = 1; x < ancho; x++) grilla += `<line x1="${x}" y1="0" x2="${x}" y2="${largo}"/>`;
-    for (let z = 1; z < largo; z++) grilla += `<line x1="0" y1="${z}" x2="${ancho}" y2="${z}"/>`;
-    // Lo bajo primero (caminos y acequias) y lo alto al final, para que se vea encima
-    const orden = [...estado.elementos].sort((a, b) => a.alto - b.alto);
+    for (let y = 1; y < largo; y++) grilla += `<line x1="0" y1="${y}" x2="${ancho}" y2="${y}"/>`;
+    const orden = [...estado.elementos].sort((a, b) => CAPAS.indexOf(a.tipo) - CAPAS.indexOf(b.tipo));
 
     // La unidad del SVG es el metro: el plano queda a escala
     svg.setAttribute('viewBox', `${-t} ${-t} ${ancho + t * 2} ${largo + t * 3}`);
@@ -214,7 +227,7 @@ function dibujar() {
         <rect width="${ancho}" height="${largo}" fill="#c9d9a8" stroke="#9fb27a" stroke-width="0.05"/>
         <g stroke="#fff" stroke-opacity=".55" stroke-width="0.02">${grilla}</g>
         ${orden.map(dibujarElemento).join('')}
-        ${orden.map(rotulo).join('')}
+        ${rotulos(orden)}
         <text x="0" y="${r2(largo + t * 1.2)}" font-size="${r2(t * 0.8)}" fill="#5c6656">Grilla de 1 m · terreno de ${num(ancho)} × ${num(largo)} m</text>`;
 }
 
@@ -249,7 +262,7 @@ svg.addEventListener('pointerdown', evento => {
     if (!clave) return seleccionar(null);
     const el = porClave(clave);
     const p = puntoPlano(evento);
-    arrastre = { el, dx: el.x - p.x, dz: el.z - p.y, movido: false };
+    arrastre = { el, dx: el.x - p.x, dy: el.y - p.y, movido: false };
     svg.setPointerCapture(evento.pointerId);
     if (estado.seleccion !== clave) seleccionar(clave);
 });
@@ -259,7 +272,7 @@ svg.addEventListener('pointermove', evento => {
     const p = puntoPlano(evento);
     // Se acomoda de a 10 cm para que sea fácil alinear
     arrastre.el.x = Math.round(limitar(p.x + arrastre.dx, 0, estado.terreno.ancho) * 10) / 10;
-    arrastre.el.z = Math.round(limitar(p.y + arrastre.dz, 0, estado.terreno.largo) * 10) / 10;
+    arrastre.el.y = Math.round(limitar(p.y + arrastre.dy, 0, estado.terreno.largo) * 10) / 10;
     arrastre.movido = true;
     svg.classList.add('moviendo');
     dibujar();
@@ -280,13 +293,13 @@ svg.addEventListener('pointercancel', soltar);
 
 // Busca un lugar libre en el terreno para un elemento nuevo
 function lugarLibre(ancho, largo) {
-    const choca = (x, z) => estado.elementos.some(e => Math.abs(e.x - x) < (e.ancho + ancho) / 2 + 0.3 && Math.abs(e.z - z) < (e.largo + largo) / 2 + 0.3);
-    for (let z = largo / 2 + 0.5; z <= estado.terreno.largo - largo / 2; z += 0.5) {
+    const choca = (x, y) => estado.elementos.some(e => Math.abs(e.x - x) < (e.ancho + ancho) / 2 + 0.3 && Math.abs(e.y - y) < (e.largo + largo) / 2 + 0.3);
+    for (let y = largo / 2 + 0.5; y <= estado.terreno.largo - largo / 2; y += 0.5) {
         for (let x = ancho / 2 + 0.5; x <= estado.terreno.ancho - ancho / 2; x += 0.5) {
-            if (!choca(x, z)) return { x, z };
+            if (!choca(x, y)) return { x, y };
         }
     }
-    return { x: estado.terreno.ancho / 2, z: estado.terreno.largo / 2 };
+    return { x: estado.terreno.ancho / 2, y: estado.terreno.largo / 2 };
 }
 
 $('#paleta').innerHTML = Object.entries(TIPOS).map(([tipo, t]) =>
@@ -295,11 +308,11 @@ $('#paleta').innerHTML = Object.entries(TIPOS).map(([tipo, t]) =>
 $('#paleta').addEventListener('click', evento => {
     const tipo = evento.target.closest('[data-agregar]')?.dataset.agregar;
     if (!tipo) return;
-    const [ancho, largo, alto] = TIPOS[tipo].medidas;
+    const [ancho, largo] = TIPOS[tipo].medidas;
     const iguales = estado.elementos.filter(e => e.tipo === tipo).length;
     const el = {
         clave: 'n' + (++contadorClaves), id: null, tipo, nombre: `${TIPOS[tipo].nombre.split(' ')[0]} ${iguales + 1}`,
-        ancho, largo, alto, rotacion: 0, media_sombra: false, ...lugarLibre(ancho, largo),
+        ancho, largo, rotacion: 0, media_sombra: false, ...lugarLibre(ancho, largo),
     };
     estado.elementos.push(el);
     marcarCambios();
@@ -337,7 +350,7 @@ function renderSeleccion() {
             <div class="row g-2">
                 <div class="col-12"><label class="form-label">Nombre</label><input type="text" class="form-control" data-campo="nombre" value="${esc(el.nombre)}" maxlength="60"></div>
                 ${campo('ancho', 'Ancho (m)', 0.1)}${campo('largo', 'Largo (m)', 0.1)}${campo('rotacion', 'Giro (°)', 15)}
-                ${campo('x', 'X (m)', 0.1)}${campo('z', 'Y (m)', 0.1)}
+                ${campo('x', 'X (m)', 0.1)}${campo('y', 'Y (m)', 0.1)}
                 ${t.plantable && el.tipo !== 'tunel' ? `<div class="col-12"><div class="form-check form-switch mt-1">
                     <input class="form-check-input" type="checkbox" id="chkMediaSombra" data-campo="media_sombra" ${el.media_sombra ? 'checked' : ''}>
                     <label class="form-check-label small" for="chkMediaSombra">Con media sombra</label></div></div>` : ''}
@@ -351,7 +364,7 @@ function renderSeleccion() {
 }
 
 // Límites de cada medida que se puede escribir
-const LIMITES = { ancho: [0.2, 50], largo: [0.2, 100], rotacion: [0, 359], x: [0, 200], z: [0, 200] };
+const LIMITES = { ancho: [0.2, 50], largo: [0.2, 100], rotacion: [0, 359], x: [0, 200], y: [0, 200] };
 
 $('#seleccion').addEventListener('input', evento => {
     const nombre = evento.target.dataset.campo;
@@ -483,7 +496,7 @@ $('#formTerreno').addEventListener('input', evento => {
     if (Number.isNaN(valor) || valor < 2 || valor > 200) return;
     estado.terreno[evento.target.name] = valor;
     // Lo que quedó afuera del terreno se acomoda en el borde
-    estado.elementos.forEach(el => { el.x = Math.min(el.x, estado.terreno.ancho); el.z = Math.min(el.z, estado.terreno.largo); });
+    estado.elementos.forEach(el => { el.x = Math.min(el.x, estado.terreno.ancho); el.y = Math.min(el.y, estado.terreno.largo); });
     marcarCambios();
 });
 
@@ -508,8 +521,8 @@ async function guardar() {
             headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify({
                 terreno: estado.terreno,
-                elementos: estado.elementos.map(({ clave, id, tipo, nombre, x, z, ancho, largo, alto, rotacion, media_sombra }) =>
-                    ({ clave, id, tipo, nombre, x, z, ancho, largo, alto, rotacion, media_sombra })),
+                elementos: estado.elementos.map(({ clave, id, tipo, nombre, x, y, ancho, largo, rotacion, media_sombra }) =>
+                    ({ clave, id, tipo, nombre, x, y, ancho, largo, rotacion, media_sombra })),
                 ubicaciones: estado.ubicaciones,
             }),
         });
