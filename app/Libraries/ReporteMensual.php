@@ -2,6 +2,7 @@
 
 namespace App\Libraries;
 
+use App\Models\CultivoModel;
 use App\Models\ProblemaModel;
 use App\Models\ReporteProblemaModel;
 use DateTime;
@@ -13,8 +14,6 @@ use DateTimeImmutable;
  */
 class ReporteMensual
 {
-    public const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-
     private $db;
 
     public function __construct(private array $huerto, private ?array $zona, private PlanRiego $plan)
@@ -41,7 +40,7 @@ class ReporteMensual
         $siembras = array_values(array_filter($cultivos, fn ($c) => $c['fecha_siembra'] >= $desde && $c['fecha_siembra'] <= $hasta));
         usort($siembras, fn ($a, $b) => strcmp($a['fecha_siembra'], $b['fecha_siembra']));
         foreach ($siembras as &$siembra) {
-            $siembra['cosecha_estimada'] = date('Y-m-d', strtotime($siembra['fecha_siembra'] . ' +' . (int) $siembra['dias_cosecha_estimados'] . ' days'));
+            $siembra['cosecha_estimada'] = CultivoModel::fechaCosecha($siembra)->format('Y-m-d');
         }
         unset($siembra);
         $problemas = $this->problemas($desde, $hasta);
@@ -54,7 +53,7 @@ class ReporteMensual
 
         return [
             'numero'       => sprintf('%04d-%s', $this->huerto['id'] ?? 1, $inicio->format('Ym')),
-            'periodo'      => self::MESES[(int) $inicio->format('n') - 1] . ' ' . $inicio->format('Y'),
+            'periodo'      => ucfirst(Fechas::mes($inicio)) . ' ' . $inicio->format('Y'),
             'desde'        => $inicio,
             'hasta'        => $fin,
             'parcial'      => $parcial,
@@ -187,7 +186,7 @@ class ReporteMensual
     // Fecha de la última cosecha de un cultivo terminado
     private function fechaFinal(array $cultivo): ?DateTimeImmutable
     {
-        if ($cultivo['estado'] !== 'Cosechado') {
+        if ($cultivo['estado'] !== CultivoModel::COSECHADO) {
             return null;
         }
 

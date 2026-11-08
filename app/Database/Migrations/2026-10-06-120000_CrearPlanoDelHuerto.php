@@ -8,7 +8,7 @@ class CrearPlanoDelHuerto extends Migration
 {
     public function up()
     {
-        // Terreno del huerto para el plano 3D: medidas, orientación y ubicación (para calcular el sol)
+        // Terreno del huerto para el plano: medidas, orientación y ubicación (para calcular el sol)
         $this->forge->addColumn('huertos', [
             'plano_ancho' => [
                 'type'       => 'DECIMAL',

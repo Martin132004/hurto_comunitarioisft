@@ -74,23 +74,12 @@
                 <p class="mb-0 opacity-75 small">Completá los datos para empezar a seguir su riego y cosecha.</p>
             </div>
             <div class="p-4 p-md-5">
-                <?php if ($plan): ?>
-                    <div class="alert alert-success d-flex gap-2 align-items-start mb-4" role="status">
-                        <i class="bi bi-calendar2-check mt-1"></i>
-                        <div>Estás sembrando lo que planificaste en el plano 3D<?= $plan['plantas'] ? ' (' . (int) $plan['plantas'] . ' plantas)' : '' ?>. Revisá los datos y guardalo.<?= $plan['notas'] ? '<div class="small mt-1">' . esc($plan['notas']) . '</div>' : '' ?></div>
-                    </div>
-                <?php endif; ?>
-                <?php if (session()->getFlashdata('error')): ?>
-                    <div class="alert alert-danger rounded-4" role="alert"><i class="bi bi-exclamation-circle me-1"></i> <?= esc(session()->getFlashdata('error')) ?></div>
-                <?php endif; ?>
+                <?= $this->include('layout/avisos') ?>
                 <form id="formCultivo" action="<?= base_url('huerto/crear') ?>" method="POST">
-                    <?php if ($plan): ?>
-                        <input type="hidden" name="plan_id" value="<?= (int) $plan['id'] ?>">
-                    <?php endif; ?>
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label" for="campo_nombre_planta"><i class="bi bi-tag me-1"></i> Nombre de la Planta</label>
-                            <input type="text" id="campo_nombre_planta" name="nombre_planta" class="form-control" maxlength="100" required placeholder="Ej. Tomate" list="listaEspecies" autocomplete="off" value="<?= esc(old('nombre_planta', $plan['especie'] ?? '')) ?>">
+                            <input type="text" id="campo_nombre_planta" name="nombre_planta" class="form-control" maxlength="100" required placeholder="Ej. Tomate" list="listaEspecies" autocomplete="off" value="<?= esc(old('nombre_planta')) ?>">
                             <datalist id="listaEspecies">
                                 <?php foreach ($especies as $especie): ?>
                                     <option value="<?= esc($especie['nombre']) ?>">
@@ -99,18 +88,18 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="campo_variedad"><i class="bi bi-bookmark me-1"></i> Variedad (Opcional)</label>
-                            <input type="text" id="campo_variedad" name="variedad" class="form-control" maxlength="100" placeholder="Ej. Perita" value="<?= esc(old('variedad', $plan['variedad'] ?? '')) ?>">
+                            <input type="text" id="campo_variedad" name="variedad" class="form-control" maxlength="100" placeholder="Ej. Perita" value="<?= esc(old('variedad')) ?>">
                         </div>
                     </div>
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <label class="form-label" for="campo_fecha_siembra"><i class="bi bi-calendar-event me-1"></i> Fecha de Siembra</label>
-                            <input type="date" id="campo_fecha_siembra" aria-describedby="ayuda_fecha_siembra" name="fecha_siembra" class="form-control" value="<?= esc(old('fecha_siembra', $plan['fecha'] ?? date('Y-m-d'))) ?>" required>
+                            <input type="date" id="campo_fecha_siembra" aria-describedby="ayuda_fecha_siembra" name="fecha_siembra" class="form-control" value="<?= esc(old('fecha_siembra', date('Y-m-d'))) ?>" required>
                             <div class="form-text" id="ayuda_fecha_siembra">Si viene de almácigo, poné la fecha de trasplante.</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="campo_dias_cosecha_estimados"><i class="bi bi-basket2 me-1"></i> Días para Cosecha</label>
-                            <input type="number" id="campo_dias_cosecha_estimados" name="dias_cosecha_estimados" class="form-control" min="1" max="400" required value="<?= esc(old('dias_cosecha_estimados', $plan['dias_cosecha'] ?? '')) ?>">
+                            <input type="number" id="campo_dias_cosecha_estimados" name="dias_cosecha_estimados" class="form-control" min="1" max="400" required value="<?= esc(old('dias_cosecha_estimados')) ?>">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label" for="campo_frecuencia_riego_dias"><i class="bi bi-droplet me-1"></i> Frecuencia Riego (Días)</label>
@@ -138,10 +127,10 @@
                             <select id="campo_cantero_id" aria-describedby="ayuda_cantero" name="cantero_id" class="form-control">
                                 <option value="">Sin ubicar en el plano</option>
                                 <?php foreach ($canteros as $id => $nombre): ?>
-                                    <option value="<?= $id ?>" <?= (int) ($plan['cantero_id'] ?? $_GET['cantero'] ?? 0) === $id ? 'selected' : '' ?>><?= esc($nombre) ?></option>
+                                    <option value="<?= $id ?>" <?= (int) ($_GET['cantero'] ?? 0) === $id ? 'selected' : '' ?>><?= esc($nombre) ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <div class="form-text" id="ayuda_cantero">Así aparece en el <a href="<?= base_url('huerto/plano') ?>">huerto 3D</a> y entra en la planificación de ese cantero.</div>
+                            <div class="form-text" id="ayuda_cantero">Así aparece en el <a href="<?= base_url('huerto/plano') ?>">plano del huerto</a>.</div>
                         </div>
                     <?php endif; ?>
                     <div class="d-flex justify-content-end gap-2">
@@ -174,7 +163,11 @@
 
 <?= $this->section('scripts') ?>
 <?php $json = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE; ?>
-<script>
+<script type="module">
+    import {
+        MESES, esc, num as numero, normalizar, listaNombres, fechaLocal, diasEntre, crearIdentificador, calendarioDeZona,
+    } from '<?= base_url('js/huerta.js') ?>?v=<?= filemtime(FCPATH . 'js/huerta.js') ?>';
+
     // Datos enviados por el controlador (el catálogo viene de la tabla 'especies')
     const ESPECIES = <?= json_encode($especies, $json) ?>;
     const ACTIVOS  = <?= json_encode($activos, $json) ?>;
@@ -182,7 +175,6 @@
     const ZONA     = <?= json_encode($zona, $json) ?>;
     const RIEGO    = <?= json_encode($riego, $json) ?>;
     const URL_CONFIGURACION = <?= json_encode(base_url('huerto/configuracion'), $json) ?>;
-    const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
     const form  = document.getElementById('formCultivo');
     const guia  = document.getElementById('guiaContenido');
@@ -191,53 +183,12 @@
 
     // ---------- Identificación de la especie ----------
 
-    // "Tomátes  Cherry" -> "tomates cherry"
-    function normalizar(texto) {
-        return String(texto).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
-    }
-
-    // Índice: nombre o sinónimo normalizado -> especie
-    const indice = {};
-    ESPECIES.forEach(especie => {
-        [especie.nombre, ...especie.sinonimos].forEach(n => indice[normalizar(n)] = especie);
-    });
-
-    function buscar(texto) {
-        // Probamos el texto tal cual y en singular ("tomates" -> "tomate", "morrones" -> "morron")
-        const singularS  = texto.split(' ').map(p => p.replace(/s$/, '')).join(' ');
-        const singularEs = texto.split(' ').map(p => p.replace(/es$/, '')).join(' ');
-        return indice[texto] || indice[singularS] || indice[singularEs] || null;
-    }
-
-    function identificar(texto) {
-        const palabras = normalizar(texto).split(' ').filter(Boolean);
-        // Si no encontramos "tomate cherry grande", probamos "tomate cherry" y después "tomate"
-        for (let n = palabras.length; n > 0; n--) {
-            const especie = buscar(palabras.slice(0, n).join(' '));
-            if (especie) return especie;
-        }
-        return null;
-    }
+    const identificar = crearIdentificador(ESPECIES);
 
     // Cultivos que ya están en el huerto, con su especie reconocida
     const activos = ACTIVOS.map(c => ({ ...c, especie: identificar(c.nombre_planta) }));
 
     // ---------- Utilidades ----------
-
-    function esc(texto) {
-        const div = document.createElement('div');
-        div.textContent = texto;
-        return div.innerHTML;
-    }
-
-    function numero(valor, decimales = 1) {
-        return Number(valor).toLocaleString('es-AR', { maximumFractionDigits: decimales });
-    }
-
-    function listaNombres(nombres) {
-        if (nombres.length <= 1) return nombres.join('');
-        return nombres.slice(0, -1).join(', ') + ' y ' + nombres[nombres.length - 1];
-    }
 
     // [2,3,4,8,9] -> "febrero a abril y agosto a septiembre"
     function rangoMeses(meses) {
@@ -256,15 +207,6 @@
             desde === hasta ? MESES[desde - 1] : MESES[desde - 1] + ' a ' + MESES[hasta - 1]));
     }
 
-    function diasEntre(desde, hasta) {
-        return Math.round((hasta - desde) / 86400000);
-    }
-
-    function fechaLocal(iso) {
-        const [a, m, d] = iso.split('-').map(Number);
-        return new Date(a, m - 1, d);
-    }
-
     // Litros a aplicar este mes según la zona y el método de riego del huerto
     function litrosAplicar(litrosPlanta) {
         return Math.round(litrosPlanta * RIEGO.coeficiente / RIEGO.eficiencia * 10) / 10;
@@ -280,33 +222,12 @@
 
     // ---------- Calendario según la zona del huerto ----------
 
-    // En las zonas frías, las especies sensibles a la helada se siembran más tarde
-    function mesesEnZona(meses, especie) {
-        if (!ZONA || !especie.sensible_helada || !Number(ZONA.desfase_meses)) return meses;
-        return meses.map(m => (m - 1 + Number(ZONA.desfase_meses)) % 12 + 1);
-    }
+    const { mesesEnZona, enPeriodoDeHeladas, proximaPrimeraHelada } = calendarioDeZona(ZONA);
 
     // "09-15" -> "15 de septiembre"
     function diaMes(md) {
         const [m, d] = md.split('-').map(Number);
         return d + ' de ' + MESES[m - 1];
-    }
-
-    function aMesDia(fecha) {
-        return String(fecha.getMonth() + 1).padStart(2, '0') + '-' + String(fecha.getDate()).padStart(2, '0');
-    }
-
-    // El período de heladas va de la primera helada (otoño) a la última (primavera)
-    function enPeriodoDeHeladas(fecha) {
-        const md = aMesDia(fecha);
-        return md >= ZONA.primera_helada && md < ZONA.ultima_helada;
-    }
-
-    function proximaPrimeraHelada(desde) {
-        const [m, d] = ZONA.primera_helada.split('-').map(Number);
-        const helada = new Date(desde.getFullYear(), m - 1, d);
-        if (helada <= desde) helada.setFullYear(helada.getFullYear() + 1);
-        return helada;
     }
 
     // ---------- Análisis personalizado ----------
@@ -571,13 +492,13 @@
 
     campo('nombre_planta').addEventListener('input', alEscribirNombre);
 
-    // Viene precargado desde una siembra planificada: completamos el resto con lo recomendado
+    // Vuelve con datos cargados (por ejemplo, después de un error): mostramos la guía y completamos lo recomendado
     if (campo('nombre_planta').value) {
-        const diasPlan = campo('dias_cosecha_estimados').value;
+        const diasCargados = campo('dias_cosecha_estimados').value;
         alEscribirNombre();
         if (especieActual) {
             aplicarRecomendados(especieActual);
-            if (diasPlan) campo('dias_cosecha_estimados').value = diasPlan;
+            if (diasCargados) campo('dias_cosecha_estimados').value = diasCargados;
             actualizarAnalisis(especieActual);
         }
     }

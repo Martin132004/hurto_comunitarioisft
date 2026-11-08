@@ -6,12 +6,7 @@
     $estados = ['terminada' => 'Terminó', 'cancelada' => 'Falsa alarma', 'activa' => 'En curso'];
 ?>
 
-<?php if (session()->getFlashdata('mensaje')): ?>
-    <div class="alert alert-success rounded-4"><i class="bi bi-check-circle me-1"></i> <?= esc(session()->getFlashdata('mensaje')) ?></div>
-<?php endif; ?>
-<?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger rounded-4" role="alert"><i class="bi bi-exclamation-circle me-1"></i> <?= esc(session()->getFlashdata('error')) ?></div>
-<?php endif; ?>
+<?= $this->include('layout/avisos') ?>
 
 <section class="em-aviso-titulo mb-4" aria-labelledby="tituloEmergencia">
     <div class="em-rayas" aria-hidden="true"></div>

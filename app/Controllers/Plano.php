@@ -2,47 +2,38 @@
 
 namespace App\Controllers;
 
-use App\Libraries\PlanRiego;
-use App\Models\CosechaModel;
 use App\Models\CultivoModel;
 use App\Models\EspecieModel;
 use App\Models\HuertoModel;
 use App\Models\PlanoElementoModel;
 use App\Models\ReporteProblemaModel;
-use App\Models\SiembraPlanificadaModel;
-use App\Models\ZonaModel;
 
 /**
- * Plano 3D del huerto: diseño de canteros y elementos, cultivos ubicados en cada cantero,
- * planificación de siembras y análisis de sol, viento y agua.
+ * Plano del huerto (2D): diseño de canteros y elementos, y en qué cantero está cada cultivo.
  */
 class Plano extends BaseController
 {
     public function index()
     {
-        if (! db_connect()->tableExists('plano_elementos')) {
-            return redirect()->to('/')->with('error', 'Falta correr las migraciones: php spark migrate');
+        if ($sinMigrar = $this->sinMigrar('plano_elementos')) {
+            return $sinMigrar;
         }
 
-        $huerto = (new HuertoModel())->actual();
-        $zona = db_connect()->tableExists('zonas') ? (new ZonaModel())->porClave($huerto['zona']) : null;
-        $plan = new PlanRiego($huerto, $zona);
+        $huerto = $this->huerto();
+        $plan = $this->planRiego();
 
         return view('plano/index', [
-            'huerto'       => $huerto,
-            'zona'         => $zona,
-            'tipos'        => PlanoElementoModel::TIPOS,
-            'elementos'    => (new PlanoElementoModel())->delHuerto($huerto['id']),
-            'cultivos'     => $this->cultivos($huerto),
-            'planificadas' => (new SiembraPlanificadaModel())->pendientes($huerto['id']),
-            'especies'     => db_connect()->tableExists('especies') ? (new EspecieModel())->catalogo() : [],
-            'riego'        => [
+            'huerto'    => $huerto,
+            'zona'      => $this->zona(),
+            'tipos'     => PlanoElementoModel::TIPOS,
+            'elementos' => (new PlanoElementoModel())->delHuerto($huerto['id']),
+            'cultivos'  => $this->cultivos($huerto),
+            'especies'  => db_connect()->tableExists('especies') ? (new EspecieModel())->catalogo() : [],
+            // Para los litros de la pestaña Hoy: ajuste de cada mes y eficiencia del método de riego
+            'riego'     => [
                 'metodo'       => $plan->metodo()['nombre'],
                 'eficiencia'   => $plan->metodo()['eficiencia'],
                 'coeficientes' => array_map(fn ($mes) => $plan->coeficiente(new \DateTime(date('Y') . "-$mes-15")), range(1, 12)),
-                'reservorio'   => (int) $huerto['reservorio_litros'],
-                'usa_turno'    => $plan->usaTurno(),
-                'entre_turnos' => $plan->diasEntreTurnos(),
             ],
         ]);
     }
@@ -56,7 +47,7 @@ class Plano extends BaseController
             return $this->response->setStatusCode(400)->setJSON(['ok' => false, 'error' => 'Los datos enviados no son válidos.']);
         }
         $huertoModel = new HuertoModel();
-        $huerto = $huertoModel->actual();
+        $huerto = $this->huerto();
 
         $numero = fn ($valor, float $min, float $max) => round(min($max, max($min, (float) $valor)), 2);
 
@@ -115,12 +106,11 @@ class Plano extends BaseController
             $ids[$this->texto($elemento['clave'] ?? $id)] = (int) $id;
         }
 
-        // Los elementos que ya no están en el plano se borran con sus siembras planificadas
+        // Los elementos que ya no están en el plano se borran y sus cultivos quedan sin ubicar
         if ($existentes) {
             $borrados = array_keys($existentes);
             $elementos->delete($borrados);
             (new CultivoModel())->whereIn('cantero_id', $borrados)->set('cantero_id', null)->update();
-            (new SiembraPlanificadaModel())->whereIn('cantero_id', $borrados)->where('cultivo_id', null)->delete();
         }
 
         // Cultivos ubicados: {cultivo_id: clave del cantero o null}
@@ -138,68 +128,6 @@ class Plano extends BaseController
             'ids'       => $ids,
             'elementos' => (new PlanoElementoModel())->delHuerto($huerto['id']),
         ]);
-    }
-
-    // planificar(): crea o modifica una siembra planificada en un cantero
-    public function planificar()
-    {
-        $datos = $this->datosJson() ?? [];
-        $huerto = (new HuertoModel())->actual();
-        $plantables = (new PlanoElementoModel())->plantables($huerto['id']);
-
-        $canteroId = (int) ($datos['cantero_id'] ?? 0);
-        $especie = mb_substr(trim($this->texto($datos['especie'] ?? '')), 0, 60);
-        $fechaTexto = $this->texto($datos['fecha'] ?? '');
-        $fecha = \DateTime::createFromFormat('!Y-m-d', $fechaTexto);
-        $dias = (int) ($datos['dias_cosecha'] ?? 0);
-        $plantas = (int) ($datos['plantas'] ?? 0);
-
-        $error = match (true) {
-            ! isset($plantables[$canteroId]) => 'Elegí un cantero guardado del plano.',
-            $especie === ''                  => 'Escribí qué vas a sembrar.',
-            ! $fecha || $fecha->format('Y-m-d') !== $fechaTexto => 'Revisá la fecha de siembra.',
-            $dias < 1 || $dias > 400         => 'Los días hasta la cosecha tienen que ser entre 1 y 400.',
-            $plantas < 0 || $plantas > 5000  => 'Revisá la cantidad de plantas.',
-            default                          => null,
-        };
-        if ($error) {
-            return $this->response->setStatusCode(422)->setJSON(['ok' => false, 'error' => $error]);
-        }
-
-        $siembras = new SiembraPlanificadaModel();
-        $fila = [
-            'huerto_id'    => $huerto['id'],
-            'cantero_id'   => $canteroId,
-            'especie'      => $especie,
-            'variedad'     => mb_substr(trim($this->texto($datos['variedad'] ?? '')), 0, 60) ?: null,
-            'fecha'        => $fecha->format('Y-m-d'),
-            'dias_cosecha' => $dias,
-            'plantas'      => $plantas ?: null,
-            'notas'        => mb_substr(trim($this->texto($datos['notas'] ?? '')), 0, 255) ?: null,
-        ];
-
-        $id = (int) ($datos['id'] ?? 0);
-        $actual = $id ? $siembras->find($id) : null;
-        if ($actual && (int) $actual['huerto_id'] === (int) $huerto['id'] && $actual['cultivo_id'] === null) {
-            $siembras->update($id, $fila);
-        } else {
-            $id = $siembras->insert($fila);
-        }
-
-        return $this->response->setJSON(['ok' => true, 'plan' => $siembras->find($id)]);
-    }
-
-    public function eliminarPlan($id)
-    {
-        $huerto = (new HuertoModel())->actual();
-        $siembras = new SiembraPlanificadaModel();
-        $plan = $siembras->find($id);
-
-        if ($plan && (int) $plan['huerto_id'] === (int) $huerto['id'] && $plan['cultivo_id'] === null) {
-            $siembras->delete($id);
-        }
-
-        return $this->response->setJSON(['ok' => true]);
     }
 
     // Cuerpo JSON del pedido, o null si no se puede leer
@@ -224,19 +152,15 @@ class Plano extends BaseController
     private function cultivos(array $huerto): array
     {
         $cultivos = (new CultivoModel())
-            ->groupStart()->where('estado !=', 'Cosechado')->orWhere('cantero_id IS NOT NULL')->groupEnd()
+            ->groupStart()->where('estado !=', CultivoModel::COSECHADO)->orWhere('cantero_id IS NOT NULL')->groupEnd()
             ->orderBy('fecha_siembra')
             ->findAll();
 
         $problemas = db_connect()->tableExists('reportes_problemas') ? (new ReporteProblemaModel())->abiertosPorCultivo($huerto['id']) : [];
-        $kg = db_connect()->tableExists('cosechas') ? (new CosechaModel())->kgPorCultivo() : [];
         $hoy = new \DateTime('today');
 
-        return array_map(function (array $c) use ($hoy, $problemas, $kg) {
-            $siembra = new \DateTime($c['fecha_siembra']);
-            $cosecha = (clone $siembra)->modify('+' . (int) $c['dias_cosecha_estimados'] . ' days');
-            $ultimoRiego = new \DateTime($c['ultimo_riego'] ? substr($c['ultimo_riego'], 0, 10) : $c['fecha_siembra']);
-            $proximoRiego = $ultimoRiego->modify('+' . max(1, (int) $c['frecuencia_riego_dias']) . ' days');
+        return array_map(function (array $c) use ($hoy, $problemas) {
+            $cosechado = $c['estado'] === CultivoModel::COSECHADO;
 
             return [
                 'id'           => (int) $c['id'],
@@ -245,13 +169,11 @@ class Plano extends BaseController
                 'variedad'     => $c['variedad'],
                 'fecha'        => $c['fecha_siembra'],
                 'dias_cosecha' => (int) $c['dias_cosecha_estimados'],
-                'frecuencia'   => (int) $c['frecuencia_riego_dias'],
                 'litros'       => (float) $c['cantidad_riego_litros'],
-                'cosechado'    => $c['estado'] === 'Cosechado',
-                'regar'        => $c['estado'] !== 'Cosechado' && $hoy >= $proximoRiego,
-                'cosechar'     => $c['estado'] !== 'Cosechado' && $hoy >= $cosecha,
+                'cosechado'    => $cosechado,
+                'regar'        => ! $cosechado && $hoy >= CultivoModel::proximoRiego($c),
+                'cosechar'     => ! $cosechado && $hoy >= CultivoModel::fechaCosecha($c),
                 'problemas'    => $problemas[$c['id']] ?? 0,
-                'kg'           => isset($kg[$c['id']]) ? (float) $kg[$c['id']] : null,
             ];
         }, $cultivos);
     }

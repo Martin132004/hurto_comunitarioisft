@@ -2,10 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Libraries\PlanRiego;
 use App\Libraries\ReporteMensual;
-use App\Models\HuertoModel;
-use App\Models\ZonaModel;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
@@ -50,10 +47,7 @@ class Reportes extends BaseController
 
     private function reporte(string $mes): array
     {
-        $huerto = (new HuertoModel())->actual();
-        $zona = db_connect()->tableExists('zonas') ? (new ZonaModel())->porClave($huerto['zona']) : null;
-
-        return (new ReporteMensual($huerto, $zona, new PlanRiego($huerto, $zona)))->generar($mes);
+        return (new ReporteMensual($this->huerto(), $this->zona(), $this->planRiego()))->generar($mes);
     }
 
     // Mes pedido ("2026-09"); si no es válido o es futuro, el mes actual

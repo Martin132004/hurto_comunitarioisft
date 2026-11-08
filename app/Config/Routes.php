@@ -41,11 +41,9 @@ $routes->post('huerto/problemas/(:num)/resolver', 'Problemas::resolver/$1');
 $routes->get('huerto/reportes', 'Reportes::index');
 $routes->get('huerto/reportes/pdf', 'Reportes::pdf');
 
-// Plano 3D del huerto y planificación de siembras
+// Plano del huerto
 $routes->get('huerto/plano', 'Plano::index');
 $routes->post('huerto/plano/guardar', 'Plano::guardar');
-$routes->post('huerto/plano/planificar', 'Plano::planificar');
-$routes->post('huerto/plano/planificar/(:num)/eliminar', 'Plano::eliminarPlan/$1');
 
 // Emergencias climáticas: plan de contingencia, daños y reparación
 $routes->get('huerto/emergencia', 'Emergencia::index');

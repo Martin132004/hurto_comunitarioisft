@@ -13,15 +13,7 @@ class Emergencia extends BaseController
 {
     public function _remap(string $metodo, ...$parametros)
     {
-        if (! db_connect()->tableExists('emergencias')) {
-            return redirect()->to('/')->with('error', 'Falta correr las migraciones: php spark migrate');
-        }
-
-        if (! method_exists($this, $metodo) || $metodo === '_remap' || ! (new \ReflectionMethod($this, $metodo))->isPublic()) {
-            throw PageNotFoundException::forPageNotFound();
-        }
-
-        return $this->{$metodo}(...$parametros);
+        return $this->sinMigrar('emergencias') ?? $this->ejecutar($metodo, $parametros);
     }
 
     // Elegir qué viene; si ya hay una emergencia en curso, se va directo a su plan
@@ -93,7 +85,7 @@ class Emergencia extends BaseController
         }
 
         // Solo los cultivos que siguen en curso pueden reportarse al técnico
-        $enCurso = array_column((new CultivoModel())->where('estado !=', 'Cosechado')->findAll(), 'id');
+        $enCurso = array_column((new CultivoModel())->enCurso()->findAll(), 'id');
 
         return view('emergencia/resumen', $datos + [
             'danos'     => array_intersect_key(PlanEmergencia::DANOS, array_flip(EmergenciaModel::lista($emergencia['danos']))),
@@ -153,7 +145,7 @@ class Emergencia extends BaseController
         }
 
         $tipo = PlanEmergencia::TIPOS[$emergencia['tipo']];
-        $cultivos = (new CultivoModel())->where('estado !=', 'Cosechado')->orderBy('nombre_planta')->findAll();
+        $cultivos = (new CultivoModel())->enCurso()->orderBy('nombre_planta')->findAll();
 
         if ($this->request->getMethod() === 'GET') {
             return view('emergencia/terminar', [

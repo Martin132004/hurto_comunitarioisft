@@ -47,9 +47,8 @@
 
 <?php
     $numero = fn ($valor) => number_format((float) $valor, 1, ',', '.');
-    $meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-    // "09-15" -> "15 de septiembre"
-    $fecha = fn ($md) => (int) substr($md, 3, 2) . ' de ' . $meses[(int) substr($md, 0, 2) - 1];
+    $meses = \App\Libraries\Fechas::MESES;
+    $fecha = fn ($md) => \App\Libraries\Fechas::diaMes($md);
 ?>
 
 <div class="row justify-content-center">
@@ -58,12 +57,7 @@
             <i class="bi bi-arrow-left"></i> Volver al panel
         </a>
 
-        <?php if (session()->getFlashdata('mensaje')): ?>
-            <div class="alert alert-success rounded-4"><i class="bi bi-check-circle me-1"></i> <?= esc(session()->getFlashdata('mensaje')) ?></div>
-        <?php endif; ?>
-        <?php if (session()->getFlashdata('error')): ?>
-            <div class="alert alert-danger rounded-4" role="alert"><i class="bi bi-exclamation-circle me-1"></i> <?= esc(session()->getFlashdata('error')) ?></div>
-        <?php endif; ?>
+        <?= $this->include('layout/avisos') ?>
 
         <div class="panel-form">
             <div class="huerto-hero rounded-0 py-4 px-4 px-md-5">
@@ -109,7 +103,7 @@
                         <label class="form-label">¿De dónde sale el agua?</label>
                         <div class="row g-3 mb-4">
                             <?php foreach ($fuentes as $clave => $fuente): ?>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <input type="radio" class="btn-check" name="fuente_agua" id="fuente_<?= $clave ?>" value="<?= $clave ?>" <?= $huerto['fuente_agua'] === $clave ? 'checked' : '' ?>>
                                     <label class="zona-opcion" for="fuente_<?= $clave ?>">
                                         <span class="zona-nombre"><i class="bi <?= $fuente['icono'] ?> me-1"></i><?= $fuente['nombre'] ?></span>
@@ -157,11 +151,12 @@
                                 <label class="form-label">Método de riego</label>
                                 <select name="metodo_riego" class="form-control">
                                     <?php foreach ($metodos as $clave => $metodo): ?>
-                                        <option value="<?= $clave ?>" <?= $huerto['metodo_riego'] === $clave ? 'selected' : '' ?>>
+                                        <option value="<?= $clave ?>" data-fuentes="<?= implode(',', $metodo['fuentes']) ?>" <?= $huerto['metodo_riego'] === $clave ? 'selected' : '' ?>>
                                             <?= $metodo['nombre'] ?> (aprovecha ~<?= round($metodo['eficiencia'] * 100) ?>% del agua)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
+                                <div class="form-text" id="ayudaMetodo"></div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Agua que podés guardar (tanque, tachos o reservorio)</label>
@@ -229,7 +224,25 @@
         document.getElementById('datosTurno').hidden = !fuente || fuente.value !== 'turno';
         document.getElementById('turnoIntervalo').hidden = semana;
         document.getElementById('turnoSemana').hidden = !semana;
+        mostrarMetodos();
     };
+
+    // Solo se ofrecen los métodos que sirven con esa agua: surco y manto necesitan el caudal del canal,
+    // y la aspersión necesita la presión de la red
+    const mostrarMetodos = () => {
+        const fuente = document.querySelector('input[name="fuente_agua"]:checked')?.value ?? 'red';
+        const select = document.querySelector('select[name="metodo_riego"]');
+        [...select.options].forEach(opcion => {
+            const sirve = opcion.dataset.fuentes.split(',').includes(fuente);
+            opcion.hidden = !sirve;
+            opcion.disabled = !sirve;
+        });
+        if (select.selectedOptions[0]?.disabled) select.value = 'manguera';
+        document.getElementById('ayudaMetodo').textContent = fuente === 'turno'
+            ? 'Con turno de canal podés regar por surco o manto el día del turno; la aspersión necesita la presión de la red.'
+            : 'Con agua de red el surco y el manto no se usan: hace falta el caudal de una acequia.';
+    };
+    mostrarMetodos();
     document.querySelectorAll('input[name="fuente_agua"], input[name="turno_modo"]').forEach(input => input.addEventListener('change', mostrarTurno));
 </script>
 <?= $this->endSection() ?>

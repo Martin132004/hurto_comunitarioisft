@@ -18,21 +18,21 @@ class Auth extends BaseController
 
         // Hasta 5 intentos por minuto desde la misma conexión
         if (! service('throttler')->check('login-' . md5($this->request->getIPAddress()), 5, MINUTE)) {
-            return redirect()->back()->withInput()->with('error', 'Demasiados intentos. Esperá un minuto y volvé a probar.');
+            return $this->volverConError('Demasiados intentos. Esperá un minuto y volvé a probar.');
         }
 
         $usuario  = trim((string) $this->request->getPost('usuario'));
         $password = (string) $this->request->getPost('password');
 
         if ($usuario === '' || $password === '') {
-            return redirect()->back()->withInput()->with('error', 'Completá el usuario y la contraseña.');
+            return $this->volverConError('Completá el usuario y la contraseña.');
         }
 
         $modelo = new UsuarioModel();
         $fila = $modelo->verificar($usuario, $password);
 
         if (! $fila) {
-            return redirect()->back()->withInput()->with('error', 'Usuario o contraseña incorrectos.');
+            return $this->volverConError('Usuario o contraseña incorrectos.');
         }
 
         // Nueva sesión para evitar que se reutilice un id anterior

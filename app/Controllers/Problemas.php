@@ -4,7 +4,6 @@ namespace App\Controllers;
 
 use App\Models\CultivoModel;
 use App\Models\EspecieModel;
-use App\Models\HuertoModel;
 use App\Models\ProblemaModel;
 use App\Models\ReporteProblemaModel;
 use App\Models\ZonaModel;
@@ -20,24 +19,13 @@ class Problemas extends BaseController
     // Todas las acciones usan estas tablas: sin migrar, se vuelve al panel con el aviso
     public function _remap(string $metodo, ...$parametros)
     {
-        $db = db_connect();
-        foreach (['problemas', 'reportes_problemas', 'zonas'] as $tabla) {
-            if (! $db->tableExists($tabla)) {
-                return redirect()->to('/')->with('error', 'Falta correr las migraciones: php spark migrate');
-            }
-        }
-
-        if (! method_exists($this, $metodo) || $metodo === '_remap' || ! (new \ReflectionMethod($this, $metodo))->isPublic()) {
-            throw PageNotFoundException::forPageNotFound();
-        }
-
-        return $this->{$metodo}(...$parametros);
+        return $this->sinMigrar('problemas', 'reportes_problemas', 'zonas') ?? $this->ejecutar($metodo, $parametros);
     }
 
     public function index()
     {
-        $huerto = (new HuertoModel())->actual();
-        $zona = (new ZonaModel())->porClave($huerto['zona']);
+        $huerto = $this->huerto();
+        $zona = $this->zona();
         $reportes = new ReporteProblemaModel();
         $catalogo = (new ProblemaModel())->catalogo();
 
@@ -65,7 +53,7 @@ class Problemas extends BaseController
     public function nuevo()
     {
         $catalogo = (new ProblemaModel())->catalogo();
-        $cultivos = (new CultivoModel())->where('estado !=', 'Cosechado')->orderBy('nombre_planta')->findAll();
+        $cultivos = (new CultivoModel())->enCurso()->orderBy('nombre_planta')->findAll();
 
         if ($this->request->getMethod() === 'GET') {
             // Para cada cultivo, los problemas del catálogo que lo pueden afectar: la vista filtra las opciones
@@ -99,20 +87,20 @@ class Problemas extends BaseController
         $hayFoto = $foto && $foto->getError() !== UPLOAD_ERR_NO_FILE;
 
         if (! $problema && $descripcion === '' && ! $hayFoto) {
-            return redirect()->back()->withInput()->with('error', 'Elegí qué problema es, contá qué ves o subí una foto.');
+            return $this->volverConError('Elegí qué problema es, contá qué ves o subí una foto.');
         }
 
         $nombreFoto = null;
         if ($hayFoto) {
             $error = $this->validarFoto($foto);
             if ($error) {
-                return redirect()->back()->withInput()->with('error', $error);
+                return $this->volverConError($error);
             }
             $nombreFoto = bin2hex(random_bytes(12)) . '.' . self::FOTO_TIPOS[$foto->getMimeType()];
             $foto->move(self::CARPETA_FOTOS, $nombreFoto);
         }
 
-        $huerto = (new HuertoModel())->actual();
+        $huerto = $this->huerto();
         $reportes = new ReporteProblemaModel();
         $id = $reportes->insert([
             'huerto_id'      => $huerto['id'],
@@ -178,7 +166,7 @@ class Problemas extends BaseController
         $respuesta = trim((string) $this->request->getPost('respuesta'));
         $tecnico = trim((string) $this->request->getPost('respondido_por'));
         if ($respuesta === '' || $tecnico === '') {
-            return redirect()->back()->withInput()->with('error', 'Completá tu nombre y la respuesta.');
+            return $this->volverConError('Completá tu nombre y la respuesta.');
         }
 
         $diagnostico = (string) $this->request->getPost('problema');
@@ -244,7 +232,7 @@ class Problemas extends BaseController
     // Problemas del catálogo con riesgo este mes para los cultivos en curso: [clave => nombres de cultivos]
     private function riesgosDelMes(array $catalogo, ?array $zona): array
     {
-        $cultivos = (new CultivoModel())->select('nombre_planta')->where('estado !=', 'Cosechado')->findAll();
+        $cultivos = (new CultivoModel())->enCurso()->select('nombre_planta')->findAll();
         $especies = new EspecieModel();
         $mes = (int) date('n');
         $desfase = (int) ($zona['desfase_meses'] ?? 0);

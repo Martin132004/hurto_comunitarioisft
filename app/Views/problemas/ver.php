@@ -57,12 +57,7 @@
             <i class="bi bi-arrow-left"></i> Volver a problemas
         </a>
 
-        <?php if (session()->getFlashdata('mensaje')): ?>
-            <div class="alert alert-success rounded-4"><i class="bi bi-check-circle me-1"></i> <?= esc(session()->getFlashdata('mensaje')) ?></div>
-        <?php endif; ?>
-        <?php if (session()->getFlashdata('error')): ?>
-            <div class="alert alert-danger rounded-4"><i class="bi bi-exclamation-circle me-1"></i> <?= esc(session()->getFlashdata('error')) ?></div>
-        <?php endif; ?>
+        <?= $this->include('layout/avisos') ?>
 
         <?php if ($reporte['problema'] && isset($brotes[$reporte['problema']]) && $reporte['estado'] !== 'resuelto'): ?>
             <div class="alert alert-danger rounded-4">

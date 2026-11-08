@@ -484,9 +484,9 @@
         return ['🌱', $tintes['verde']];
     };
 
-    $diasSemana = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-    $mesesAnio = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-    $hoyTexto = $diasSemana[(int) date('w')] . ' ' . date('j') . ' de ' . $mesesAnio[(int) date('n') - 1];
+    $diasSemana = \App\Libraries\Fechas::DIAS;
+    $mesesAnio = \App\Libraries\Fechas::MESES;
+    $hoyTexto = \App\Libraries\Fechas::larga($hoyFecha);
     $horarios = \App\Models\CultivoModel::HORARIOS_RIEGO;
 
     // Lo que hay que hacer hoy, ya ordenado por prioridad
@@ -529,6 +529,8 @@
         ];
     }
 ?>
+
+<?= $this->include('layout/avisos') ?>
 
 <section class="banner mb-4" aria-labelledby="nombreHuerto">
     <div class="banner-fila">

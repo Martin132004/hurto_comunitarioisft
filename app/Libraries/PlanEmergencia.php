@@ -2,6 +2,7 @@
 
 namespace App\Libraries;
 
+use App\Models\CultivoModel;
 use App\Models\EmergenciaModel;
 use App\Models\EspecieModel;
 use App\Models\HuertoModel;
@@ -269,7 +270,7 @@ class PlanEmergencia
         $riesgo = [];
 
         foreach ($cultivos as $cultivo) {
-            if ($cultivo['estado'] === 'Cosechado') {
+            if ($cultivo['estado'] === CultivoModel::COSECHADO) {
                 continue;
             }
 

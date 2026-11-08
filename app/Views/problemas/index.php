@@ -76,7 +76,7 @@
 <?= $this->section('contenido') ?>
 
 <?php
-    $meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    $meses = \App\Libraries\Fechas::MESES;
     $nombreProblema = fn ($clave) => $catalogo[$clave]['nombre'] ?? 'Sin identificar';
 ?>
 

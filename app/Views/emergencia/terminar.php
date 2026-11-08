@@ -13,9 +13,7 @@
         </div>
     </section>
 
-    <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert alert-danger rounded-4" role="alert"><i class="bi bi-exclamation-circle me-1"></i> <?= esc(session()->getFlashdata('error')) ?></div>
-    <?php endif; ?>
+    <?= $this->include('layout/avisos') ?>
 
     <form action="<?= base_url('huerto/emergencia/' . $emergencia['id'] . '/terminar') ?>" method="POST">
 

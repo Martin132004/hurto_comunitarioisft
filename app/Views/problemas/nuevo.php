@@ -69,9 +69,7 @@
             <i class="bi bi-arrow-left"></i> Volver a problemas
         </a>
 
-        <?php if (session()->getFlashdata('error')): ?>
-            <div class="alert alert-danger rounded-4"><i class="bi bi-exclamation-circle me-1"></i> <?= esc(session()->getFlashdata('error')) ?></div>
-        <?php endif; ?>
+        <?= $this->include('layout/avisos') ?>
 
         <div class="panel-form">
             <div class="huerto-hero rounded-0 py-4 px-4 px-md-5">

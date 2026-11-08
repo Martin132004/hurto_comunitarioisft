@@ -9,17 +9,17 @@ class HuertoModel extends Model
     // De dónde sale el agua: define si se puede regar cualquier día o solo en el turno
     public const FUENTES_AGUA = [
         'red'   => ['nombre' => 'Agua de red', 'detalle' => 'Canilla o agua corriente: se puede regar cualquier día.', 'icono' => 'bi-droplet'],
-        'pozo'  => ['nombre' => 'Pozo o bomba', 'detalle' => 'Perforación propia: se puede regar cualquier día.', 'icono' => 'bi-moisture'],
         'turno' => ['nombre' => 'Turno de canal', 'detalle' => 'El agua llega solo los días de turno; entre turnos se riega con agua guardada.', 'icono' => 'bi-water'],
     ];
 
-    // Eficiencia: parte del agua aplicada que realmente aprovecha la planta
+    // Eficiencia: parte del agua aplicada que realmente aprovecha la planta.
+    // Fuentes: con qué agua se puede usar (surco y manto necesitan el caudal del canal).
     public const METODOS_RIEGO = [
-        'goteo'     => ['nombre' => 'Goteo', 'eficiencia' => 0.9],
-        'manguera'  => ['nombre' => 'Manguera o regadera al pie', 'eficiencia' => 0.8],
-        'aspersion' => ['nombre' => 'Aspersión', 'eficiencia' => 0.7],
-        'surco'     => ['nombre' => 'Surco', 'eficiencia' => 0.6],
-        'manto'     => ['nombre' => 'Manto o inundación', 'eficiencia' => 0.5],
+        'goteo'     => ['nombre' => 'Goteo', 'eficiencia' => 0.9, 'fuentes' => ['red', 'turno']],
+        'manguera'  => ['nombre' => 'Manguera o regadera al pie', 'eficiencia' => 0.8, 'fuentes' => ['red', 'turno']],
+        'aspersion' => ['nombre' => 'Aspersión', 'eficiencia' => 0.7, 'fuentes' => ['red']],
+        'surco'     => ['nombre' => 'Surco', 'eficiencia' => 0.6, 'fuentes' => ['turno']],
+        'manto'     => ['nombre' => 'Manto o inundación', 'eficiencia' => 0.5, 'fuentes' => ['turno']],
     ];
 
     public const DIAS_SEMANA = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'];
