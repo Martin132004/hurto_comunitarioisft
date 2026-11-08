@@ -11,11 +11,6 @@ use CodeIgniter\Exceptions\PageNotFoundException;
 // Emergencias climáticas: el huertero avisa que viene Zonda, granizo o helada y sigue un plan de contingencia
 class Emergencia extends BaseController
 {
-    public function _remap(string $metodo, ...$parametros)
-    {
-        return $this->sinMigrar('emergencias') ?? $this->ejecutar($metodo, $parametros);
-    }
-
     // Elegir qué viene; si ya hay una emergencia en curso, se va directo a su plan
     public function index()
     {

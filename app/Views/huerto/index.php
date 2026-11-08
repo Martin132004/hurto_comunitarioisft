@@ -426,34 +426,6 @@
 
 <?php
     $litros = fn ($valor) => number_format((float) $valor, 1, ',', '.');
-    $hoyFecha = new \DateTime('today');
-
-    // Una sola regla para todo el panel: le toca riego si su próximo riego cae hoy o ya pasó.
-    // La usan la semana del banner, "Para hacer hoy", las tarjetas de arriba, el filtro y cada cultivo.
-    $necesitaRiego = fn (array $c): bool => $c['estado'] !== 'Cosechado' && $c['dias_proximo_riego'] === 0;
-    $regadoHoy = fn (array $c): bool => $c['estado'] !== 'Cosechado' && ! empty($c['ultimo_riego'])
-        && date('Y-m-d', strtotime($c['ultimo_riego'])) === date('Y-m-d');
-
-    // Estado de cada cultivo, en orden de prioridad
-    $estadoDe = function (array $c) use ($necesitaRiego): string {
-        if ($c['estado'] == 'Cosechado') { return 'cosechado'; }
-        if ($c['alerta_cosecha']) { return 'cosecha'; }
-        if ($necesitaRiego($c)) { return 'riego'; }
-        return 'crecimiento';
-    };
-
-    $cuentas = ['todos' => 0, 'riego' => 0, 'cosecha' => 0, 'crecimiento' => 0, 'cosechado' => 0];
-    foreach ($cultivos ?? [] as $c) {
-        $cuentas['todos']++;
-        $cuentas[$estadoDe($c)]++;
-    }
-    // Los que están para cosechar también cuentan si además les toca riego
-    $cuentas['riego'] = count(array_filter($cultivos ?? [], $necesitaRiego));
-
-    // Lo urgente primero: regar, cosechar, en crecimiento y al final lo cosechado
-    $orden = ['riego' => 0, 'cosecha' => 1, 'crecimiento' => 2, 'cosechado' => 3];
-    usort($cultivos, fn ($a, $b) => $orden[$estadoDe($a)] <=> $orden[$estadoDe($b)]);
-
     $estados = [
         'riego'       => ['texto' => 'Regar hoy', 'clase' => 'estado-riego'],
         'cosecha'     => ['texto' => 'Lista para cosechar', 'clase' => 'estado-cosecha'],
@@ -486,48 +458,7 @@
 
     $diasSemana = \App\Libraries\Fechas::DIAS;
     $mesesAnio = \App\Libraries\Fechas::MESES;
-    $hoyTexto = \App\Libraries\Fechas::larga($hoyFecha);
     $horarios = \App\Models\CultivoModel::HORARIOS_RIEGO;
-
-    // Lo que hay que hacer hoy, ya ordenado por prioridad
-    $paraRegar = array_filter($cultivos ?? [], $necesitaRiego);
-    $regadosHoy = array_filter($cultivos ?? [], $regadoHoy);
-    $nombresRegados = array_map(fn ($c) => esc(mb_strtolower($c['nombre_planta'])), $regadosHoy);
-    $listaRegados = count($nombresRegados) > 1
-        ? implode(', ', array_slice($nombresRegados, 0, -1)) . ' y ' . end($nombresRegados)
-        : implode('', $nombresRegados);
-    $paraCosechar = array_filter($cultivos ?? [], fn ($c) => $estadoDe($c) === 'cosecha');
-    $hayTareas = $paraRegar || $paraCosechar || ($riego['usa_turno'] && $hoyHayTurno && $riego['reservorio'] > 0) || ! empty($problemas['brotes']);
-
-    // Si hoy no hay nada, el riego más cercano
-    $proximoRiego = null;
-    foreach ($cultivos ?? [] as $c) {
-        if ($c['estado'] !== 'Cosechado' && ($proximoRiego === null || $c['dias_proximo_riego'] < $proximoRiego['dias_proximo_riego'])) {
-            $proximoRiego = $c;
-        }
-    }
-
-    // Semana que viene: riegos programados y días de turno de agua
-    $diasCortos = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
-    $semana = [];
-    for ($d = 0; $d < 7; $d++) {
-        $fecha = (clone $hoyFecha)->modify("+{$d} day");
-        $riegos = 0;
-        foreach ($cultivos ?? [] as $c) {
-            $desde = max(0, (int) $c['dias_proximo_riego']);
-            $cada = max(1, (int) $c['frecuencia_riego_dias']);
-            if ($c['estado'] !== 'Cosechado' && $d >= $desde && ($d - $desde) % $cada === 0) {
-                $riegos++;
-            }
-        }
-        $semana[] = [
-            'nombre' => $d === 0 ? 'hoy' : $diasCortos[(int) $fecha->format('w')],
-            'largo'  => $diasSemana[(int) $fecha->format('w')] . ' ' . $fecha->format('j'),
-            'numero' => $fecha->format('j'),
-            'riegos' => $riegos,
-            'turno'  => ! empty($riego['usa_turno']) && (isset($plan) ? $plan->esDiaDeTurno($fecha) : false),
-        ];
-    }
 ?>
 
 <?= $this->include('layout/avisos') ?>
@@ -627,23 +558,12 @@
                     </li>
                 <?php endforeach; ?>
 
-                <?php if (! empty($problemas['brotes'])): ?>
-                    <li class="tarea">
-                        <span class="tarea-icono tono-alerta"><i class="bi bi-exclamation-octagon"></i></span>
-                        <div class="tarea-texto">
-                            <div class="tarea-titulo">Revisar las plantas</div>
-                            <div class="tarea-detalle">Varias huertas de la zona reportaron <?= esc(mb_strtolower(implode(', ', $problemas['brotes']))) ?>.</div>
-                        </div>
-                        <a href="<?= base_url('huerto/problemas') ?>" class="btn btn-light">Ver qué hacer</a>
-                    </li>
-                <?php endif; ?>
-
                 <?php if ($regadosHoy): ?>
                     <li class="tarea tarea-hecha">
                         <span class="tarea-icono tono-verde"><i class="bi bi-check2-all"></i></span>
                         <div class="tarea-texto">
                             <div class="tarea-titulo">Ya regaste hoy</div>
-                            <div class="tarea-detalle"><?= ucfirst($listaRegados) ?>. No hace falta volver a regarlos hoy.</div>
+                            <div class="tarea-detalle"><?= ucfirst(esc($listaRegados)) ?>. No hace falta volver a regarlos hoy.</div>
                         </div>
                     </li>
                 <?php endif; ?>
@@ -653,7 +573,7 @@
                 <span class="tarea-icono tono-verde"><i class="bi bi-check2"></i></span>
                 <span>
                     <?php if ($regadosHoy): ?>
-                        Todo al día: ya regaste <?= $listaRegados ?>.
+                        Todo al día: ya regaste <?= esc($listaRegados) ?>.
                     <?php else: ?>
                         No hay tareas para hoy.
                     <?php endif; ?>
@@ -706,7 +626,7 @@
 </div>
 
 <div class="row g-3 mb-4">
-    <div class="<?= $problemas ? 'col-lg-7' : 'col-12' ?>">
+    <div class="col-lg-7">
         <div class="resumen">
             <div class="resumen-cabecera">
                 <h2><i class="bi bi-droplet-half tono-agua"></i>Riego de este mes</h2>
@@ -737,26 +657,19 @@
         </div>
     </div>
 
-    <?php if ($problemas): ?>
         <div class="col-lg-5">
             <div class="resumen">
                 <div class="resumen-cabecera">
                     <h2><i class="bi bi-bug tono-alerta"></i>Problemas y plagas</h2>
-                    <?php if ($problemas['brotes']): ?>
-                        <span class="chip tono-alerta"><i class="bi bi-exclamation-octagon"></i>Alerta en tu zona</span>
-                    <?php endif; ?>
                 </div>
                 <div class="resumen-cifra"><?= $problemas['sin_resolver'] ?> <small>sin resolver</small></div>
                 <ul class="resumen-lista">
-                    <?php if ($problemas['brotes']): ?>
-                        <li class="text-danger"><i class="bi bi-exclamation-octagon-fill"></i><span>Varias huertas de la zona reportaron <?= esc(mb_strtolower(implode(', ', $problemas['brotes']))) ?>.</span></li>
-                    <?php endif; ?>
                     <?php if ($problemas['respondidos']): ?>
                         <li class="text-primary"><i class="bi bi-chat-left-text"></i>El técnico respondió <?= $problemas['respondidos'] ?> reporte(s).</li>
                     <?php endif; ?>
                     <?php if ($problemas['repetidos']): ?>
                         <li class="text-danger"><i class="bi bi-arrows-angle-expand"></i><?= esc(implode(', ', $problemas['repetidos'])) ?> en varios cultivos.</li>
-                    <?php elseif (! $problemas['respondidos'] && ! $problemas['brotes']): ?>
+                    <?php elseif (! $problemas['respondidos']): ?>
                         <li><i class="bi bi-camera"></i>Si ves hojas comidas, manchas o bichos, reportalo con una foto.</li>
                     <?php endif; ?>
                 </ul>
@@ -765,7 +678,6 @@
                 </div>
             </div>
         </div>
-    <?php endif; ?>
 </div>
 
 <div id="cultivos" class="d-flex align-items-end justify-content-between mb-3">
@@ -803,22 +715,13 @@
     <div class="row g-3" id="grillaCultivos">
         <?php foreach ($cultivos as $planta): ?>
             <?php
-                $estado = $estadoDe($planta);
+                $estado = $planta['estado_panel'];
                 [$icono, $tinte] = $iconoDe($planta['nombre_planta']);
                 $cosechado = $estado === 'cosechado';
-                $diasCosecha = (int) $hoyFecha->diff($planta['fecha_cosecha'])->days;
-
-                if ($cosechado) {
-                    $proximo = '—';
-                } elseif ($planta['dias_proximo_riego'] === 0) {
-                    $proximo = 'Hoy';
-                } elseif ($planta['dias_proximo_riego'] === 1) {
-                    $proximo = 'Mañana';
-                } else {
-                    $proximo = 'En ' . $planta['dias_proximo_riego'] . ' días';
-                }
+                $diasCosecha = $planta['dias_a_cosecha'];
+                $proximo = $planta['proximo_riego_texto'];
             ?>
-            <div class="col-sm-6 col-xl-4 cultivo-col" data-estado="<?= $estado ?>" data-riego="<?= $necesitaRiego($planta) ? '1' : '0' ?>" data-texto="<?= esc(mb_strtolower($planta['nombre_planta'] . ' ' . $planta['variedad'])) ?>">
+            <div class="col-sm-6 col-xl-4 cultivo-col" data-estado="<?= $estado ?>" data-riego="<?= $planta['necesita_riego'] ? '1' : '0' ?>" data-texto="<?= esc(mb_strtolower($planta['nombre_planta'] . ' ' . $planta['variedad'])) ?>">
                 <article class="cultivo" data-estado="<?= $estado ?>" style="--tinte: <?= $tinte ?>">
                     <div class="cultivo-cabecera">
                         <div class="cultivo-avatar" aria-hidden="true"><?= $icono ?></div>
@@ -835,9 +738,7 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <?php if (! $cosechado): ?>
                                     <li><a class="dropdown-item" href="<?= base_url('huerto/cosechar/' . $planta['id']) ?>"><i class="bi bi-basket2"></i>Registrar cosecha</a></li>
-                                    <?php if ($problemas !== null): ?>
-                                        <li><a class="dropdown-item" href="<?= base_url('huerto/problemas/nuevo?cultivo=' . $planta['id']) ?>"><i class="bi bi-bug"></i>Reportar un problema</a></li>
-                                    <?php endif; ?>
+                                    <li><a class="dropdown-item" href="<?= base_url('huerto/problemas/nuevo?cultivo=' . $planta['id']) ?>"><i class="bi bi-bug"></i>Reportar un problema</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                 <?php endif; ?>
                                 <li>
@@ -887,10 +788,10 @@
                         </dl>
                     <?php endif; ?>
 
-                    <?php $conTurno = $necesitaRiego($planta) && $riego['usa_turno'] && ! $hoyHayTurno; ?>
-                    <?php if ($conTurno || $regadoHoy($planta) || ! empty($problemas['por_cultivo'][$planta['id']]) || (! $cosechado && isset($kgCosechados[$planta['id']]))): ?>
+                    <?php $conTurno = $planta['necesita_riego'] && $riego['usa_turno'] && ! $hoyHayTurno; ?>
+                    <?php if ($conTurno || $planta['regado_hoy'] || ! empty($problemas['por_cultivo'][$planta['id']]) || (! $cosechado && isset($kgCosechados[$planta['id']]))): ?>
                         <div class="cultivo-avisos">
-                            <?php if ($regadoHoy($planta)): ?>
+                            <?php if ($planta['regado_hoy']): ?>
                                 <span class="text-success fw-semibold"><i class="bi bi-check2-circle"></i>Regado hoy a las <?= date('H:i', strtotime($planta['ultimo_riego'])) ?></span>
                             <?php endif; ?>
                             <?php if ($conTurno): ?>
@@ -908,7 +809,7 @@
                     <?php if (! $cosechado): ?>
                         <div class="cultivo-acciones">
                             <form action="<?= base_url('huerto/riego/' . $planta['id']) ?>" method="POST">
-                                <button type="submit" class="btn <?= $necesitaRiego($planta) ? 'btn-agua' : 'btn-light' ?>" aria-label="Regar <?= esc($planta['nombre_planta'], 'attr') ?>"><i class="bi bi-droplet-fill me-1"></i>Regar</button>
+                                <button type="submit" class="btn <?= $planta['necesita_riego'] ? 'btn-agua' : 'btn-light' ?>" aria-label="Regar <?= esc($planta['nombre_planta'], 'attr') ?>"><i class="bi bi-droplet-fill me-1"></i>Regar</button>
                             </form>
                             <?php if ($planta['alerta_cosecha'] || isset($kgCosechados[$planta['id']])): ?>
                                 <a href="<?= base_url('huerto/cosechar/' . $planta['id']) ?>" class="btn btn-cosecha" aria-label="Cosechar <?= esc($planta['nombre_planta'], 'attr') ?>"><i class="bi bi-basket2 me-1"></i>Cosechar</a>

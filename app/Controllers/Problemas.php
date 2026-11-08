@@ -9,18 +9,12 @@ use App\Models\ReporteProblemaModel;
 use App\Models\ZonaModel;
 use CodeIgniter\Exceptions\PageNotFoundException;
 
-// Reporte de plagas y problemas del huerto, con respuesta del técnico y alertas por zona
+// Reporte de plagas y problemas del huerto, con respuesta del técnico
 class Problemas extends BaseController
 {
     private const CARPETA_FOTOS = WRITEPATH . 'uploads/problemas/';
     private const FOTO_MAX_KB = 8192;
     private const FOTO_TIPOS = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-
-    // Todas las acciones usan estas tablas: sin migrar, se vuelve al panel con el aviso
-    public function _remap(string $metodo, ...$parametros)
-    {
-        return $this->sinMigrar('problemas', 'reportes_problemas', 'zonas') ?? $this->ejecutar($metodo, $parametros);
-    }
 
     public function index()
     {
@@ -41,7 +35,6 @@ class Problemas extends BaseController
             'catalogo'   => $catalogo,
             'reportes'   => $lista,
             'filtro'     => $filtro,
-            'brotes'     => $reportes->brotesEnZona($huerto['zona']),
             'repetidos'  => $reportes->repetidosEnHuerto($huerto['id']),
             'vigilar'    => $this->riesgosDelMes($catalogo, $zona),
             'tipos'      => ProblemaModel::TIPOS,
@@ -147,7 +140,6 @@ class Problemas extends BaseController
             'catalogo'    => $catalogo,
             'sugerencias' => $sugerencias,
             'zona'        => $zona,
-            'brotes'      => (new ReporteProblemaModel())->brotesEnZona($reporte['zona']),
             'tipos'       => ProblemaModel::TIPOS,
             'estados'     => ReporteProblemaModel::ESTADOS,
             'gravedades'  => ReporteProblemaModel::GRAVEDADES,

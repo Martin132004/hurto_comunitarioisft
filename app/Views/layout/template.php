@@ -1,15 +1,12 @@
 <?php
-    // Datos del huerto para la barra lateral (funciona aunque no estén corridas las migraciones)
+    // Datos del huerto para la barra lateral
     $huertoActual = (new \App\Models\HuertoModel())->actual();
-    $zonaActual = null;
-    if (! empty($huertoActual['zona']) && db_connect()->tableExists('zonas')) {
-        $zonaActual = (new \App\Models\ZonaModel())->where('clave', $huertoActual['zona'])->first();
-    }
+    $zonaActual = (new \App\Models\ZonaModel())->porClave($huertoActual['zona']);
 
     $fechaLarga = \App\Libraries\Fechas::larga(new \DateTime());
 
     // Emergencia climática en curso: se avisa en todas las pantallas
-    $emergenciaActiva = db_connect()->tableExists('emergencias') ? (new \App\Models\EmergenciaModel())->activa() : null;
+    $emergenciaActiva = (new \App\Models\EmergenciaModel())->activa();
     $emergenciaTipo = $emergenciaActiva ? (\App\Libraries\PlanEmergencia::TIPOS[$emergenciaActiva['tipo']] ?? null) : null;
 
     // Menú lateral: [ruta, patrón para marcar activo, ícono, texto]

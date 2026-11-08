@@ -97,17 +97,6 @@
     </div>
 </section>
 
-<?php foreach ($brotes as $clave => $huertas): ?>
-    <div class="alert alert-danger rounded-4 d-flex gap-2 align-items-start">
-        <i class="bi bi-exclamation-octagon-fill mt-1"></i>
-        <div>
-            <strong>Alerta en tu zona: <?= esc($nombreProblema($clave)) ?>.</strong>
-            Lo reportaron <?= $huertas ?> huertas de <?= esc($zona['nombre'] ?? 'tu zona') ?> en los últimos <?= \App\Models\ReporteProblemaModel::BROTE_DIAS ?> días.
-            Revisá tus plantas y aplicá la prevención. <a href="#problema-<?= esc($clave) ?>" class="alert-link">Ver qué hacer</a>
-        </div>
-    </div>
-<?php endforeach; ?>
-
 <?php foreach ($repetidos as $clave => $cultivos): ?>
     <div class="alert alert-warning rounded-4 d-flex gap-2 align-items-start">
         <i class="bi bi-arrows-angle-expand mt-1"></i>

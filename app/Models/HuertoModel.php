@@ -69,10 +69,6 @@ class HuertoModel extends Model
     // Por ahora el sistema gestiona un solo huerto: devolvemos el primero (o valores por defecto)
     public function actual(): array
     {
-        if (! $this->db->tableExists($this->table)) {
-            return self::POR_DEFECTO;
-        }
-
         return array_merge(self::POR_DEFECTO, $this->orderBy('id')->first() ?? []);
     }
 }

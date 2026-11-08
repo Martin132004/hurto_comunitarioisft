@@ -15,10 +15,6 @@ class Plano extends BaseController
 {
     public function index()
     {
-        if ($sinMigrar = $this->sinMigrar('plano_elementos')) {
-            return $sinMigrar;
-        }
-
         $huerto = $this->huerto();
         $plan = $this->planRiego();
 
@@ -28,7 +24,7 @@ class Plano extends BaseController
             'tipos'     => PlanoElementoModel::TIPOS,
             'elementos' => (new PlanoElementoModel())->delHuerto($huerto['id']),
             'cultivos'  => $this->cultivos($huerto),
-            'especies'  => db_connect()->tableExists('especies') ? (new EspecieModel())->catalogo() : [],
+            'especies'  => (new EspecieModel())->catalogo(),
             // Para los litros de la pestaña Hoy: ajuste de cada mes y eficiencia del método de riego
             'riego'     => [
                 'metodo'       => $plan->metodo()['nombre'],
@@ -156,7 +152,7 @@ class Plano extends BaseController
             ->orderBy('fecha_siembra')
             ->findAll();
 
-        $problemas = db_connect()->tableExists('reportes_problemas') ? (new ReporteProblemaModel())->abiertosPorCultivo($huerto['id']) : [];
+        $problemas = (new ReporteProblemaModel())->abiertosPorCultivo($huerto['id']);
         $hoy = new \DateTime('today');
 
         return array_map(function (array $c) use ($hoy, $problemas) {

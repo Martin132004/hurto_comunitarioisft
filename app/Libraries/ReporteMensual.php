@@ -84,10 +84,6 @@ class ReporteMensual
 
     private function cosechas(string $desde, string $hasta): array
     {
-        if (! $this->db->tableExists('cosechas')) {
-            return [];
-        }
-
         return $this->db->table('cosechas c')
             ->select('c.fecha, c.kg, c.final, c.observaciones, cu.nombre_planta, cu.variedad')
             ->join('cultivos cu', 'cu.id = c.cultivo_id', 'left')
@@ -100,18 +96,13 @@ class ReporteMensual
     // Riegos registrados contra los que correspondían según la frecuencia de cada cultivo
     private function riego(array $cultivos, DateTimeImmutable $inicio, DateTimeImmutable $fin): array
     {
-        $registrados = [];
-        if ($this->db->tableExists('riegos')) {
-            $filas = $this->db->table('riegos')
-                ->select('cultivo_id, COUNT(*) AS cantidad, SUM(litros) AS litros')
-                ->where('fecha >=', $inicio->format('Y-m-d 00:00:00'))
-                ->where('fecha <=', $fin->format('Y-m-d 23:59:59'))
-                ->groupBy('cultivo_id')
-                ->get()->getResultArray();
-            foreach ($filas as $fila) {
-                $registrados[$fila['cultivo_id']] = $fila;
-            }
-        }
+        $filas = $this->db->table('riegos')
+            ->select('cultivo_id, COUNT(*) AS cantidad, SUM(litros) AS litros')
+            ->where('fecha >=', $inicio->format('Y-m-d 00:00:00'))
+            ->where('fecha <=', $fin->format('Y-m-d 23:59:59'))
+            ->groupBy('cultivo_id')
+            ->get()->getResultArray();
+        $registrados = array_column($filas, null, 'cultivo_id');
 
         // Los litros del plan se calculan con el coeficiente de mitad de mes
         $mitad = $inicio->modify('+14 days');
@@ -164,11 +155,7 @@ class ReporteMensual
 
     private function problemas(string $desde, string $hasta): array
     {
-        if (! $this->db->tableExists('reportes_problemas')) {
-            return [];
-        }
-
-        $catalogo = $this->db->tableExists('problemas') ? (new ProblemaModel())->catalogo() : [];
+        $catalogo = (new ProblemaModel())->catalogo();
         $filas = (new ReporteProblemaModel())
             ->where('huerto_id', $this->huerto['id'])
             ->where('created_at >=', $desde . ' 00:00:00')
@@ -190,9 +177,7 @@ class ReporteMensual
             return null;
         }
 
-        $final = $this->db->tableExists('cosechas')
-            ? $this->db->table('cosechas')->selectMax('fecha')->where('cultivo_id', $cultivo['id'])->where('final', 1)->get()->getRow('fecha')
-            : null;
+        $final = $this->db->table('cosechas')->selectMax('fecha')->where('cultivo_id', $cultivo['id'])->where('final', 1)->get()->getRow('fecha');
 
         return new DateTimeImmutable($final ?? $cultivo['updated_at'] ?? 'today');
     }

@@ -19,9 +19,8 @@ class ReporteProblemaModel extends Model
         'resuelto'   => ['nombre' => 'Resuelto', 'color' => 'success', 'icono' => 'bi-check2-circle'],
     ];
 
-    // Un mismo problema en esta cantidad de huertas de una zona, dentro de estos días, genera una alerta
-    public const BROTE_DIAS = 21;
-    public const BROTE_MIN_HUERTOS = 2;
+    // Días hacia atrás en los que un problema repetido en varios cultivos se considera reciente
+    public const DIAS_RECIENTES = 21;
 
     protected $table      = 'reportes_problemas';
     protected $primaryKey = 'id';
@@ -46,27 +45,7 @@ class ReporteProblemaModel extends Model
 
     private function desde(): string
     {
-        return date('Y-m-d H:i:s', strtotime('-' . self::BROTE_DIAS . ' days'));
-    }
-
-    // Problemas que se repiten en varias huertas de la zona: [clave => cantidad de huertas]
-    public function brotesEnZona(?string $zona): array
-    {
-        if (! $zona) {
-            return [];
-        }
-
-        $filas = $this->builder()
-            ->select('problema, COUNT(DISTINCT huerto_id) AS huertas')
-            ->where('zona', $zona)
-            ->where('problema IS NOT NULL')
-            ->where('created_at >=', $this->desde())
-            ->groupBy('problema')
-            ->having('huertas >=', self::BROTE_MIN_HUERTOS)
-            ->orderBy('huertas', 'DESC')
-            ->get()->getResultArray();
-
-        return array_column($filas, 'huertas', 'problema');
+        return date('Y-m-d H:i:s', strtotime('-' . self::DIAS_RECIENTES . ' days'));
     }
 
     // Problemas sin resolver que aparecen en más de un cultivo del huerto: [clave => cultivos afectados]

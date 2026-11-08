@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Libraries\Fechas;
+use App\Libraries\PlanRiego;
 use App\Models\CosechaModel;
 use App\Models\CultivoModel;
 use App\Models\EspecieModel;
@@ -14,40 +16,60 @@ use App\Models\ZonaModel;
 
 class Huerto extends BaseController
 {
+    // Panel: el controlador calcula todo lo que se muestra; la vista solo lo dibuja
     public function index()
     {
         $plan = $this->planRiego();
         $hoy = new \DateTime('today');
-        $cultivos = (new CultivoModel())->findAll();
+        $riego = $plan->resumen($this->cultivosActivos(), $hoy);
+        $hoyHayTurno = $plan->esDiaDeTurno($hoy);
+        $cultivos = array_map(fn ($c) => $this->datosDeTarjeta($c, $plan, $hoy), (new CultivoModel())->findAll());
 
-        // Datos de cada tarjeta: alertas, avance del ciclo, próximo riego y litros de este mes
-        foreach ($cultivos as &$planta) {
-            $siembra = new \DateTime($planta['fecha_siembra']);
-            $cosecha = CultivoModel::fechaCosecha($planta);
-            $proximoRiego = CultivoModel::proximoRiego($planta);
-            $diasDesdeSiembra = $siembra <= $hoy ? $siembra->diff($hoy)->days : 0;
+        // Lo urgente primero: regar, cosechar, en crecimiento y al final lo cosechado
+        $orden = ['riego' => 0, 'cosecha' => 1, 'crecimiento' => 2, 'cosechado' => 3];
+        usort($cultivos, fn ($a, $b) => $orden[$a['estado_panel']] <=> $orden[$b['estado_panel']]);
 
-            $planta += [
-                'alerta_cosecha'     => $hoy >= $cosecha,
-                'alerta_riego'       => $hoy >= $proximoRiego,
-                'dias_desde_siembra' => $diasDesdeSiembra,
-                'progreso'           => min(100, (int) round($diasDesdeSiembra * 100 / max(1, (int) $planta['dias_cosecha_estimados']))),
-                'fecha_cosecha'      => $cosecha,
-                'dias_proximo_riego' => $hoy >= $proximoRiego ? 0 : $hoy->diff($proximoRiego)->days,
-                'litros_hoy'         => $plan->litrosAplicar((float) $planta['cantidad_riego_litros'], $hoy),
-            ];
+        $cuentas = ['todos' => count($cultivos)] + array_fill_keys(array_keys($orden), 0);
+        foreach ($cultivos as $c) {
+            $cuentas[$c['estado_panel']]++;
         }
-        unset($planta);
+        // Los que están para cosechar también cuentan si además les toca riego
+        $cuentas['riego'] = count(array_filter($cultivos, fn ($c) => $c['necesita_riego']));
+
+        // Lo que hay que hacer hoy
+        $paraRegar = array_filter($cultivos, fn ($c) => $c['necesita_riego']);
+        $paraCosechar = array_filter($cultivos, fn ($c) => $c['estado_panel'] === 'cosecha');
+        $regadosHoy = array_filter($cultivos, fn ($c) => $c['regado_hoy']);
+        $nombresRegados = array_values(array_map(fn ($c) => mb_strtolower($c['nombre_planta']), $regadosHoy));
+
+        // Si hoy no hay nada, el riego más cercano
+        $proximoRiego = null;
+        foreach ($cultivos as $c) {
+            if ($c['estado_panel'] !== 'cosechado' && ($proximoRiego === null || $c['dias_proximo_riego'] < $proximoRiego['dias_proximo_riego'])) {
+                $proximoRiego = $c;
+            }
+        }
 
         return view('huerto/index', [
-            'cultivos'     => $cultivos,
-            'zona'         => $this->zona(),
-            'huerto'       => $this->huerto(),
-            'riego'        => $plan->resumen($this->cultivosActivos(), $hoy),
-            'plan'         => $plan,
-            'hoyHayTurno'  => $plan->esDiaDeTurno($hoy),
-            'problemas'    => $this->resumenProblemas(),
-            'kgCosechados' => db_connect()->tableExists('cosechas') ? (new CosechaModel())->kgPorCultivo() : [],
+            'cultivos'      => $cultivos,
+            'zona'          => $this->zona(),
+            'huerto'        => $this->huerto(),
+            'riego'         => $riego,
+            'hoyHayTurno'   => $hoyHayTurno,
+            'problemas'     => $this->resumenProblemas(),
+            'kgCosechados'  => (new CosechaModel())->kgPorCultivo(),
+            'hoyFecha'      => $hoy,
+            'hoyTexto'      => Fechas::larga($hoy),
+            'cuentas'       => $cuentas,
+            'paraRegar'     => $paraRegar,
+            'paraCosechar'  => $paraCosechar,
+            'regadosHoy'    => $regadosHoy,
+            'listaRegados'  => count($nombresRegados) > 1
+                ? implode(', ', array_slice($nombresRegados, 0, -1)) . ' y ' . end($nombresRegados)
+                : implode('', $nombresRegados),
+            'hayTareas'     => $paraRegar || $paraCosechar || ($riego['usa_turno'] && $hoyHayTurno && $riego['reservorio'] > 0),
+            'proximoRiego'  => $proximoRiego,
+            'semana'        => $this->semanaDeRiego($cultivos, $plan, $riego['usa_turno'], $hoy),
         ]);
     }
 
@@ -106,7 +128,7 @@ class Huerto extends BaseController
     // configuracion(): Datos del huerto: zona y sistema de riego que usa
     public function configuracion()
     {
-        $zonas = db_connect()->tableExists('zonas') ? (new ZonaModel())->orderBy('id')->findAll() : [];
+        $zonas = (new ZonaModel())->orderBy('id')->findAll();
 
         if ($this->request->getMethod() === 'GET') {
             return view('huerto/configuracion', [
@@ -169,13 +191,11 @@ class Huerto extends BaseController
         $model->update($id, ['ultimo_riego' => $ahora->format('Y-m-d H:i:s')]);
 
         // Se guarda en el historial con los litros que corresponden a este mes y al método de riego
-        if (db_connect()->tableExists('riegos')) {
-            (new RiegoModel())->insert([
-                'cultivo_id' => $id,
-                'fecha'      => $ahora->format('Y-m-d H:i:s'),
-                'litros'     => $this->planRiego()->litrosAplicar((float) $planta['cantidad_riego_litros'], $ahora),
-            ]);
-        }
+        (new RiegoModel())->insert([
+            'cultivo_id' => $id,
+            'fecha'      => $ahora->format('Y-m-d H:i:s'),
+            'litros'     => $this->planRiego()->litrosAplicar((float) $planta['cantidad_riego_litros'], $ahora),
+        ]);
 
         // Redirigimos a la pantalla de riego para que recargarla no registre otro riego
         return redirect()->to('huerto/regando/' . $id);
@@ -274,6 +294,72 @@ class Huerto extends BaseController
         return redirect()->to('/');
     }
 
+    // Datos de la tarjeta de un cultivo: estado, avance del ciclo, próximo riego y litros de este mes
+    private function datosDeTarjeta(array $planta, PlanRiego $plan, \DateTime $hoy): array
+    {
+        $siembra = new \DateTime($planta['fecha_siembra']);
+        $cosecha = CultivoModel::fechaCosecha($planta);
+        $proximoRiego = CultivoModel::proximoRiego($planta);
+        $diasDesdeSiembra = $siembra <= $hoy ? $siembra->diff($hoy)->days : 0;
+        $diasProximoRiego = $hoy >= $proximoRiego ? 0 : $hoy->diff($proximoRiego)->days;
+        $cosechado = $planta['estado'] === CultivoModel::COSECHADO;
+        // Una sola regla para todo el panel: le toca riego si su próximo riego cae hoy o ya pasó
+        $necesitaRiego = ! $cosechado && $diasProximoRiego === 0;
+
+        return $planta + [
+            'alerta_cosecha'      => $hoy >= $cosecha,
+            'alerta_riego'        => $hoy >= $proximoRiego,
+            'dias_desde_siembra'  => $diasDesdeSiembra,
+            'progreso'            => min(100, (int) round($diasDesdeSiembra * 100 / max(1, (int) $planta['dias_cosecha_estimados']))),
+            'fecha_cosecha'       => $cosecha,
+            'dias_a_cosecha'      => $hoy->diff($cosecha)->days,
+            'dias_proximo_riego'  => $diasProximoRiego,
+            'litros_hoy'          => $plan->litrosAplicar((float) $planta['cantidad_riego_litros'], $hoy),
+            'necesita_riego'      => $necesitaRiego,
+            'regado_hoy'          => ! $cosechado && ! empty($planta['ultimo_riego']) && date('Y-m-d', strtotime($planta['ultimo_riego'])) === date('Y-m-d'),
+            // Estado de la tarjeta, en orden de prioridad
+            'estado_panel'        => match (true) {
+                $cosechado            => 'cosechado',
+                $hoy >= $cosecha      => 'cosecha',
+                $necesitaRiego        => 'riego',
+                default               => 'crecimiento',
+            },
+            'proximo_riego_texto' => match (true) {
+                $cosechado              => '—',
+                $diasProximoRiego === 0 => 'Hoy',
+                $diasProximoRiego === 1 => 'Mañana',
+                default                 => 'En ' . $diasProximoRiego . ' días',
+            },
+        ];
+    }
+
+    // Los próximos 7 días: cuántos riegos tocan cada día y si hay turno de agua
+    private function semanaDeRiego(array $cultivos, PlanRiego $plan, bool $usaTurno, \DateTime $hoy): array
+    {
+        $diasCortos = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+        $semana = [];
+        for ($d = 0; $d < 7; $d++) {
+            $fecha = (clone $hoy)->modify("+{$d} day");
+            $riegos = 0;
+            foreach ($cultivos as $c) {
+                $desde = max(0, (int) $c['dias_proximo_riego']);
+                $cada = max(1, (int) $c['frecuencia_riego_dias']);
+                if ($c['estado_panel'] !== 'cosechado' && $d >= $desde && ($d - $desde) % $cada === 0) {
+                    $riegos++;
+                }
+            }
+            $semana[] = [
+                'nombre' => $d === 0 ? 'hoy' : $diasCortos[(int) $fecha->format('w')],
+                'largo'  => Fechas::dia($fecha) . ' ' . $fecha->format('j'),
+                'numero' => $fecha->format('j'),
+                'riegos' => $riegos,
+                'turno'  => $usaTurno && $plan->esDiaDeTurno($fecha),
+            ];
+        }
+
+        return $semana;
+    }
+
     // Formulario de alta con la guía de cultivo
     private function formularioCultivo()
     {
@@ -285,8 +371,7 @@ class Huerto extends BaseController
         return view('huerto/crear', [
             'canteros' => $this->canteros(),
             'horarios' => CultivoModel::HORARIOS_RIEGO,
-            // Si todavía no se corrió la migración de especies, el formulario funciona sin guía
-            'especies' => db_connect()->tableExists('especies') ? (new EspecieModel())->catalogo() : [],
+            'especies' => (new EspecieModel())->catalogo(),
             'activos'  => $activos,
             'zona'     => $this->zona(),
             // Sistema de riego del huerto: la guía ajusta los litros y avisa sobre el turno de agua
@@ -305,16 +390,12 @@ class Huerto extends BaseController
     // Canteros del plano del huerto donde se puede ubicar un cultivo: [id => nombre]
     private function canteros(): array
     {
-        return db_connect()->tableExists('plano_elementos') ? (new PlanoElementoModel())->plantables($this->huerto()['id']) : [];
+        return (new PlanoElementoModel())->plantables($this->huerto()['id']);
     }
 
-    // Reportes sin resolver y alertas de la zona para mostrar en el panel
-    private function resumenProblemas(): ?array
+    // Reportes sin resolver y problemas repetidos para mostrar en el panel
+    private function resumenProblemas(): array
     {
-        if (! db_connect()->tableExists('reportes_problemas')) {
-            return null;
-        }
-
         $huerto = $this->huerto();
         $reportes = new ReporteProblemaModel();
         $nombres = array_column((new ProblemaModel())->catalogo(), 'nombre', 'clave');
@@ -323,7 +404,6 @@ class Huerto extends BaseController
         return [
             'sin_resolver' => $reportes->where('huerto_id', $huerto['id'])->where('estado !=', 'resuelto')->countAllResults(),
             'respondidos'  => $reportes->where('huerto_id', $huerto['id'])->where('estado', 'respondido')->countAllResults(),
-            'brotes'       => $nombrar(array_keys($reportes->brotesEnZona($huerto['zona']))),
             'repetidos'    => $nombrar(array_keys($reportes->repetidosEnHuerto($huerto['id']))),
             'por_cultivo'  => $reportes->abiertosPorCultivo($huerto['id']),
         ];

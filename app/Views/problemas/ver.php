@@ -59,13 +59,6 @@
 
         <?= $this->include('layout/avisos') ?>
 
-        <?php if ($reporte['problema'] && isset($brotes[$reporte['problema']]) && $reporte['estado'] !== 'resuelto'): ?>
-            <div class="alert alert-danger rounded-4">
-                <i class="bi bi-exclamation-octagon-fill me-1"></i>
-                <strong>No es solo en tu huerto:</strong> <?= $brotes[$reporte['problema']] ?> huertas de <?= esc($zona['nombre'] ?? 'la zona') ?> reportaron lo mismo en los últimos <?= \App\Models\ReporteProblemaModel::BROTE_DIAS ?> días.
-            </div>
-        <?php endif; ?>
-
         <div class="panel-form mb-4">
             <div class="huerto-hero rounded-0 py-4 px-4 px-md-5">
                 <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
@@ -143,7 +136,7 @@
                                         <option value="<?= esc($clave) ?>" <?= old('problema', $reporte['problema']) === $clave ? 'selected' : '' ?>><?= esc($p['nombre']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <div class="form-text">Confirmá o corregí lo que eligió el huertero: se usa para las alertas de la zona.</div>
+                                <div class="form-text">Confirmá o corregí lo que eligió el huertero: así el aviso de problemas repetidos y los reportes usan el diagnóstico correcto.</div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label" for="respuesta">Qué hacer</label>
