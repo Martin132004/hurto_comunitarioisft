@@ -2,140 +2,211 @@
 
 <?= $this->section('estilos') ?>
 <style>
-    /* Guía de cultivo */
+    /* Ficha técnica de especie (columna derecha) */
     .guia {
         position: sticky;
-        top: 100px;
+        top: 76px;
+        border-top-color: var(--hc-acequia);
+    }
+    .guia-cabecera-ficha {
+        background: var(--hc-salvia);
+        border-bottom: 1px solid var(--hc-borde);
+        padding: 1rem 1.25rem;
     }
     .guia-vacia {
         text-align: center;
-        padding: 2.5rem 1.5rem;
-        color: var(--texto-2);
+        padding: 2.25rem 1.25rem;
+        color: var(--hc-tinta-2);
     }
-    .guia-vacia i {
-        font-size: 2.5rem;
-        color: var(--huerto-verde);
+    .guia-vacia .icono-ficha {
+        width: 44px;
+        height: 44px;
+        border-radius: 6px;
+        background: var(--hc-salvia);
+        border: 1px solid var(--hc-borde);
+        color: var(--hc-hoja);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
     }
-    .guia-dato {
-        background: var(--huerto-crema);
-        border-radius: .8rem;
-        padding: .6rem .8rem;
-        height: 100%;
+    .guia-subtitulo {
+        font-family: var(--hc-serif);
+        font-size: .95rem;
+        font-weight: 700;
+        color: var(--hc-tinta);
+        padding-bottom: .3rem;
+        border-bottom: 1px solid var(--hc-borde);
+        margin: 1.15rem 0 .65rem;
     }
-    .guia-dato .etiqueta {
+    .guia-grilla {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        border: 1px solid var(--hc-borde);
+        border-radius: 6px;
+        background: var(--hc-papel);
+        overflow: hidden;
+    }
+    .guia-celda {
+        padding: .5rem .7rem;
+        border-bottom: 1px solid var(--hc-borde-fino);
+        border-right: 1px solid var(--hc-borde-fino);
+    }
+    .guia-celda:nth-child(2n) { border-right: 0; }
+    .guia-celda .etiqueta {
         font-size: .72rem;
-        color: var(--texto-2);
+        color: var(--hc-tinta-2);
         font-weight: 500;
+        margin-bottom: .1rem;
     }
-    .guia-dato .valor {
+    .guia-celda .valor {
         font-weight: 700;
-        color: var(--huerto-verde-oscuro);
-        font-size: .9rem;
+        color: var(--hc-tinta);
+        font-size: .86rem;
     }
-    .guia h6 {
-        font-size: .8rem;
-        text-transform: uppercase;
-        letter-spacing: .05em;
-        color: var(--texto-2);
-        font-weight: 700;
-        margin: 1.25rem 0 .6rem;
+    .analisis {
+        display: flex;
+        flex-direction: column;
+        gap: .45rem;
     }
     .analisis li {
         display: flex;
-        gap: .6rem;
-        font-size: .875rem;
-        margin-bottom: .6rem;
+        gap: .55rem;
+        font-size: .84rem;
+        padding: .55rem .7rem;
+        border-radius: 6px;
+        border: 1px solid var(--hc-borde-fino);
+        background: var(--hc-lienzo);
+        line-height: 1.4;
     }
     .analisis li i {
         flex-shrink: 0;
-        margin-top: .1rem;
+        margin-top: .12rem;
     }
     .campo-sugerido {
-        animation: resaltar 1.2s ease-out;
+        animation: resaltar .9s ease-out;
     }
     @keyframes resaltar {
-        from { box-shadow: 0 0 0 .3rem rgba(167, 227, 122, .9); }
-        to   { box-shadow: 0 0 0 0 rgba(167, 227, 122, 0); }
+        from { box-shadow: 0 0 0 3px rgba(27, 102, 54, .35); background-color: var(--hc-hoja-claro); }
+        to   { box-shadow: 0 0 0 0 rgba(27, 102, 54, 0); background-color: #fff; }
+    }
+    .subbloque-form {
+        background: var(--hc-lienzo);
+        border: 1px solid var(--hc-borde-fino);
+        border-radius: 6px;
+        padding: 1rem 1.1rem;
+        margin-bottom: 1rem;
+    }
+    .subbloque-titulo {
+        font-family: var(--hc-serif);
+        font-size: .95rem;
+        font-weight: 700;
+        color: var(--hc-tinta);
+        margin-bottom: .75rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
     }
 </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('contenido') ?>
 
-<a href="<?= base_url('/') ?>" class="text-decoration-none text-success fw-semibold d-inline-flex align-items-center gap-1 mb-3">
+<a href="<?= base_url('/') ?>" class="hc-volver mb-3">
     <i class="bi bi-arrow-left"></i> Volver al panel
 </a>
 
 <div class="row g-4 align-items-start">
     <div class="col-lg-7">
         <div class="panel-form">
-            <div class="huerto-hero rounded-0 py-4 px-4 px-md-5">
-                <h1 class="fw-bold mb-1"><i class="bi bi-flower1 me-2"></i>Agregar Nuevo Cultivo</h1>
-                <p class="mb-0 opacity-75 small">Completá los datos para empezar a seguir su riego y cosecha.</p>
+            <div class="huerto-hero rounded-0">
+                <h1 class="mb-1"><i class="bi bi-flower1"></i>Agregar nuevo cultivo</h1>
+                <p class="mb-0">Completá los datos para empezar a seguir su riego y cosecha.</p>
             </div>
-            <div class="p-4 p-md-5">
+            <div class="p-4">
                 <?= $this->include('layout/avisos') ?>
                 <form id="formCultivo" action="<?= base_url('huerto/crear') ?>" method="POST">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label" for="campo_nombre_planta"><i class="bi bi-tag me-1"></i> Nombre de la Planta</label>
-                            <input type="text" id="campo_nombre_planta" name="nombre_planta" class="form-control" maxlength="100" required placeholder="Ej. Tomate" list="listaEspecies" autocomplete="off" value="<?= esc(old('nombre_planta')) ?>">
-                            <datalist id="listaEspecies">
-                                <?php foreach ($especies as $especie): ?>
-                                    <option value="<?= esc($especie['nombre']) ?>">
-                                <?php endforeach; ?>
-                            </datalist>
+
+                    <div class="subbloque-form">
+                        <div class="subbloque-titulo">
+                            <span class="hc-paso-numero">1</span> Planta
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="campo_variedad"><i class="bi bi-bookmark me-1"></i> Variedad (Opcional)</label>
-                            <input type="text" id="campo_variedad" name="variedad" class="form-control" maxlength="100" placeholder="Ej. Perita" value="<?= esc(old('variedad')) ?>">
-                        </div>
-                    </div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-4">
-                            <label class="form-label" for="campo_fecha_siembra"><i class="bi bi-calendar-event me-1"></i> Fecha de Siembra</label>
-                            <input type="date" id="campo_fecha_siembra" aria-describedby="ayuda_fecha_siembra" name="fecha_siembra" class="form-control" value="<?= esc(old('fecha_siembra', date('Y-m-d'))) ?>" required>
-                            <div class="form-text" id="ayuda_fecha_siembra">Si viene de almácigo, poné la fecha de trasplante.</div>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" for="campo_dias_cosecha_estimados"><i class="bi bi-basket2 me-1"></i> Días para Cosecha</label>
-                            <input type="number" id="campo_dias_cosecha_estimados" name="dias_cosecha_estimados" class="form-control" min="1" max="400" required value="<?= esc(old('dias_cosecha_estimados')) ?>">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" for="campo_frecuencia_riego_dias"><i class="bi bi-droplet me-1"></i> Frecuencia Riego (Días)</label>
-                            <input type="number" id="campo_frecuencia_riego_dias" name="frecuencia_riego_dias" class="form-control" min="1" max="60" required value="<?= esc(old('frecuencia_riego_dias', '')) ?>">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="campo_nombre_planta"><i class="bi bi-flower1 me-1"></i> Nombre de la planta</label>
+                                <input type="text" id="campo_nombre_planta" name="nombre_planta" class="form-control" maxlength="100" required placeholder="Ej. Tomate" list="listaEspecies" autocomplete="off" value="<?= esc(old('nombre_planta')) ?>">
+                                <datalist id="listaEspecies">
+                                    <?php foreach ($especies as $especie): ?>
+                                        <option value="<?= esc($especie['nombre']) ?>">
+                                    <?php endforeach; ?>
+                                </datalist>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="campo_variedad"><i class="bi bi-tag me-1"></i> Variedad <span class="text-muted fw-normal">(opcional)</span></label>
+                                <input type="text" id="campo_variedad" name="variedad" class="form-control" maxlength="100" placeholder="Ej. Perita" value="<?= esc(old('variedad')) ?>">
+                            </div>
                         </div>
                     </div>
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label" for="campo_horario_riego"><i class="bi bi-clock me-1"></i> Horario de Riego</label>
-                            <select id="campo_horario_riego" name="horario_riego" class="form-control" required>
-                                <?php foreach ($horarios as $clave => $horario): ?>
-                                    <option value="<?= $clave ?>" <?= old('horario_riego') === $clave ? 'selected' : '' ?>><?= $horario['nombre'] ?> (<?= implode(' y ', $horario['franjas']) ?>)</option>
-                                <?php endforeach; ?>
-                            </select>
+
+                    <div class="subbloque-form">
+                        <div class="subbloque-titulo">
+                            <span class="hc-paso-numero">2</span> Siembra y cosecha
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label" for="campo_cantidad_riego_litros"><i class="bi bi-cup-straw me-1"></i> Cantidad por Riego (Litros)</label>
-                            <input type="number" id="campo_cantidad_riego_litros" aria-describedby="ayuda_cantidad_riego" name="cantidad_riego_litros" class="form-control" step="0.1" min="0.1" required placeholder="Ej. 1.5" value="<?= esc(old('cantidad_riego_litros', '')) ?>">
-                            <div class="form-text" id="ayuda_cantidad_riego">Lo que necesita la planta en primavera u otoño. El sistema lo ajusta según el mes y tu método de riego.</div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="campo_fecha_siembra"><i class="bi bi-calendar-event me-1"></i> Fecha de siembra</label>
+                                <input type="date" id="campo_fecha_siembra" aria-describedby="ayuda_fecha_siembra" name="fecha_siembra" class="form-control" value="<?= esc(old('fecha_siembra', date('Y-m-d'))) ?>" required>
+                                <div class="form-text" id="ayuda_fecha_siembra">Si viene de almácigo, poné la fecha de trasplante.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="campo_dias_cosecha_estimados"><i class="bi bi-basket2 me-1"></i> Días para cosecha</label>
+                                <div class="input-group">
+                                    <input type="number" id="campo_dias_cosecha_estimados" name="dias_cosecha_estimados" class="form-control" min="1" max="400" required placeholder="Ej. 80" value="<?= esc(old('dias_cosecha_estimados')) ?>">
+                                    <span class="input-group-text">días</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <?php if ($canteros): ?>
-                        <div class="mb-4">
-                            <label class="form-label" for="campo_cantero_id"><i class="bi bi-bounding-box me-1"></i> Cantero (Opcional)</label>
-                            <select id="campo_cantero_id" aria-describedby="ayuda_cantero" name="cantero_id" class="form-control">
-                                <option value="">Sin ubicar en el plano</option>
-                                <?php foreach ($canteros as $id => $nombre): ?>
-                                    <option value="<?= $id ?>" <?= (int) ($_GET['cantero'] ?? 0) === $id ? 'selected' : '' ?>><?= esc($nombre) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <div class="form-text" id="ayuda_cantero">Así aparece en el <a href="<?= base_url('huerto/plano') ?>">plano del huerto</a>.</div>
+
+                    <div class="subbloque-form mb-4">
+                        <div class="subbloque-titulo">
+                            <span class="hc-paso-numero">3</span> Riego
                         </div>
-                    <?php endif; ?>
-                    <div class="d-flex justify-content-end gap-2">
-                        <a href="<?= base_url('/') ?>" class="btn btn-light rounded-pill px-4">Cancelar</a>
-                        <button type="submit" class="btn btn-huerto"><i class="bi bi-check-lg me-1"></i> Guardar</button>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="campo_frecuencia_riego_dias"><i class="bi bi-arrow-repeat me-1"></i> Frecuencia de riego</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">cada</span>
+                                    <input type="number" id="campo_frecuencia_riego_dias" name="frecuencia_riego_dias" class="form-control" min="1" max="60" required placeholder="2" value="<?= esc(old('frecuencia_riego_dias', '')) ?>">
+                                    <span class="input-group-text">días</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="campo_horario_riego"><i class="bi bi-clock me-1"></i> Horario de riego</label>
+                                <select id="campo_horario_riego" name="horario_riego" class="form-control" required>
+                                    <?php foreach ($horarios as $clave => $horario): ?>
+                                        <option value="<?= $clave ?>" <?= old('horario_riego') === $clave ? 'selected' : '' ?>><?= $horario['nombre'] ?> (<?= implode(' y ', $horario['franjas']) ?>)</option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="campo_cantidad_riego_litros"><i class="bi bi-droplet me-1"></i> Cantidad por riego</label>
+                                <div class="input-group">
+                                    <input type="number" id="campo_cantidad_riego_litros" aria-describedby="ayuda_cantidad_riego" name="cantidad_riego_litros" class="form-control" step="0.1" min="0.1" required placeholder="Ej. 1.5" value="<?= esc(old('cantidad_riego_litros', '')) ?>">
+                                    <span class="input-group-text">L</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-text mt-0" id="ayuda_cantidad_riego">
+                                    Lo que necesita la planta en primavera u otoño. El sistema lo ajusta según el mes y tu método de riego (<?= esc(mb_strtolower($riego['metodo'])) ?>).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                        <a href="<?= base_url('/') ?>" class="btn btn-light px-3">Cancelar</a>
+                        <button type="submit" class="btn btn-huerto"><i class="bi bi-check2 me-1"></i> Guardar</button>
                     </div>
                 </form>
             </div>
@@ -144,10 +215,16 @@
 
     <div class="col-lg-5">
         <aside class="panel-form guia" aria-label="Guía de cultivo">
+            <div class="guia-cabecera-ficha d-flex align-items-center justify-content-between">
+                <span class="fw-bold small"><i class="bi bi-book me-1 text-success"></i> Guía de cultivo</span>
+                <?php if ($zona): ?>
+                    <span class="badge text-bg-light"><?= esc($zona['nombre']) ?></span>
+                <?php endif; ?>
+            </div>
             <div id="guiaContenido" class="p-4">
                 <div class="guia-vacia">
-                    <i class="bi bi-book"></i>
-                    <p class="fw-bold text-dark mt-3 mb-1">Guía de cultivo</p>
+                    <span class="icono-ficha"><i class="bi bi-journal-richtext"></i></span>
+                    <p class="fw-bold text-dark mt-3 mb-1" style="font-family: var(--hc-serif); font-size: 1.05rem;">Guía de cultivo</p>
                     <?php if (empty($especies)): ?>
                         <p class="small mb-0">El catálogo de especies todavía no está cargado.</p>
                     <?php else: ?>
@@ -377,17 +454,17 @@
 
     // ---------- Dibujo de la guía ----------
 
-    function dato(icono, etiqueta, valor) {
-        return `<div class="col-6"><div class="guia-dato">
+    function celda(icono, etiqueta, valor) {
+        return `<div class="guia-celda">
                     <div class="etiqueta"><i class="bi ${icono} me-1"></i>${etiqueta}</div>
                     <div class="valor">${valor}</div>
-                </div></div>`;
+                </div>`;
     }
 
     function mostrarGuia(especie, textoEscrito) {
         const horario = HORARIOS[especie.horario] ? HORARIOS[especie.horario].nombre : especie.horario;
         const reconocido = normalizar(textoEscrito) !== normalizar(especie.nombre)
-            ? `<p class="small text-muted mb-0">Reconocido a partir de «${esc(textoEscrito)}»</p>` : '';
+            ? `<div class="small text-muted">Reconocido a partir de «${esc(textoEscrito)}»</div>` : '';
         const capitalizar = texto => texto.replace(/^./, l => l.toUpperCase());
         const almacigo = mesesEnZona(especie.meses_almacigo, especie);
         const zona = ZONA
@@ -397,41 +474,41 @@
         guia.innerHTML = `
             <div class="d-flex justify-content-between align-items-start gap-2">
                 <div>
-                    <span class="badge rounded-pill text-bg-light border mb-2">${esc(especie.familia)}</span>
-                    <h5 class="fw-bold mb-0" style="color: var(--huerto-verde-oscuro)"><i class="bi bi-book me-2"></i>Guía: ${esc(especie.nombre)}</h5>
+                    <span class="badge text-bg-light mb-1">${esc(especie.familia)}</span>
+                    <h4 class="mb-0" style="font-family: var(--hc-serif); font-size: 1.3rem;">Guía: ${esc(especie.nombre)}</h4>
                     ${reconocido}
                 </div>
             </div>
-            <div class="small text-muted mt-2">${zona}</div>
+            <div class="small text-muted mt-1">${zona}</div>
 
-            <h6>Cómo cultivarlo</h6>
-            <div class="row g-2">
-                ${almacigo.length ? dato('bi-house-door', 'Almácigo', capitalizar(rangoMeses(almacigo))) : ''}
-                ${dato('bi-calendar3', almacigo.length ? 'Trasplante' : 'Siembra', capitalizar(rangoMeses(mesesEnZona(especie.meses, especie))))}
-                ${dato('bi-tree', 'Tipo de siembra', esc(especie.tipo_siembra))}
-                ${dato('bi-sun', 'Exposición', esc(especie.exposicion))}
-                ${dato('bi-arrows', 'Distancia / profundidad', `${especie.distancia_cm} cm / ${especie.profundidad_cm > 0 ? numero(especie.profundidad_cm) + ' cm' : 'a ras'}`)}
-                ${dato('bi-snow', 'Heladas', especie.sensible_helada ? 'No las soporta' : 'Las tolera')}
-                ${dato('bi-moisture', 'Tolerancia a sales', esc(especie.tolerancia_sal))}
+            <div class="guia-subtitulo">Cómo cultivarlo</div>
+            <div class="guia-grilla">
+                ${almacigo.length ? celda('bi-house-door', 'Almácigo', capitalizar(rangoMeses(almacigo))) : ''}
+                ${celda('bi-calendar3', almacigo.length ? 'Trasplante' : 'Siembra', capitalizar(rangoMeses(mesesEnZona(especie.meses, especie))))}
+                ${celda('bi-tree', 'Tipo de siembra', esc(especie.tipo_siembra))}
+                ${celda('bi-sun', 'Exposición', esc(especie.exposicion))}
+                ${celda('bi-arrows-expand-vertical', 'Distancia / profundidad', `${especie.distancia_cm} cm / ${especie.profundidad_cm > 0 ? numero(especie.profundidad_cm) + ' cm' : 'a ras'}`)}
+                ${celda('bi-snow', 'Heladas', especie.sensible_helada ? 'No las soporta' : 'Las tolera')}
+                ${celda('bi-moisture', 'Tolerancia a sales', esc(especie.tolerancia_sal))}
             </div>
 
-            <h6>Valores recomendados</h6>
-            <div class="row g-2 mb-3">
-                ${dato('bi-basket2', 'Días a cosecha', especie.dias_cosecha)}
-                ${dato('bi-droplet', 'Riego', 'Cada ' + especie.frecuencia + ' día(s)')}
-                ${dato('bi-clock', 'Horario', esc(horario))}
-                ${dato('bi-cup-straw', 'Por riego', numero(especie.litros) + ' L')}
+            <div class="guia-subtitulo">Valores recomendados</div>
+            <div class="guia-grilla mb-2">
+                ${celda('bi-basket2', 'Días a cosecha', especie.dias_cosecha)}
+                ${celda('bi-arrow-repeat', 'Riego', 'Cada ' + especie.frecuencia + ' día(s)')}
+                ${celda('bi-clock', 'Horario', esc(horario))}
+                ${celda('bi-droplet', 'Por riego', numero(especie.litros) + ' L')}
             </div>
-            <button type="button" id="usarRecomendados" class="btn btn-outline-success btn-sm w-100">
-                <i class="bi bi-magic me-1"></i> Usar valores recomendados
+            <button type="button" id="usarRecomendados" class="btn btn-outline-success btn-sm w-100 fw-semibold">
+                <i class="bi bi-arrow-down-left-square me-1"></i> Usar valores recomendados
             </button>
 
-            <h6>Análisis para tu huerto</h6>
+            <div class="guia-subtitulo">Análisis para tu huerto</div>
             <ul class="list-unstyled analisis mb-0" id="analisis"></ul>
 
             ${especie.consejos.length ? `
-                <h6>Consejos</h6>
-                <ul class="small ps-3 mb-0">${especie.consejos.map(c => `<li class="mb-1">${esc(c)}</li>`).join('')}</ul>` : ''}
+                <div class="guia-subtitulo">Consejos</div>
+                <ul class="small ps-3 mb-0 text-muted">${especie.consejos.map(c => `<li class="mb-1">${esc(c)}</li>`).join('')}</ul>` : ''}
         `;
 
         document.getElementById('usarRecomendados').addEventListener('click', () => aplicarRecomendados(especie));
@@ -449,8 +526,8 @@
     function mostrarNoEncontrado(texto) {
         guia.innerHTML = `
             <div class="guia-vacia">
-                <i class="bi bi-search"></i>
-                <p class="fw-bold text-dark mt-3 mb-1">No tenemos guía para «${esc(texto)}»</p>
+                <span class="icono-ficha"><i class="bi bi-search"></i></span>
+                <p class="fw-bold text-dark mt-3 mb-1" style="font-family: var(--hc-serif);">No tenemos guía para «${esc(texto)}»</p>
                 <p class="small mb-0">Podés cargarlo igual completando los datos a mano. Especies disponibles: ${esc(ESPECIES.map(e => e.nombre).join(', '))}.</p>
             </div>`;
     }
@@ -472,8 +549,6 @@
         actualizarAnalisis(especie);
     }
 
-    // ---------- Eventos ----------
-
     let especieActual = null;
 
     function alEscribirNombre() {
@@ -492,7 +567,6 @@
 
     campo('nombre_planta').addEventListener('input', alEscribirNombre);
 
-    // Vuelve con datos cargados (por ejemplo, después de un error): mostramos la guía y completamos lo recomendado
     if (campo('nombre_planta').value) {
         const diasCargados = campo('dias_cosecha_estimados').value;
         alEscribirNombre();
@@ -503,7 +577,6 @@
         }
     }
 
-    // Cualquier cambio en el resto del formulario recalcula el análisis
     ['fecha_siembra', 'dias_cosecha_estimados', 'frecuencia_riego_dias', 'horario_riego', 'cantidad_riego_litros'].forEach(nombre => {
         campo(nombre).addEventListener('input', () => especieActual && actualizarAnalisis(especieActual));
     });

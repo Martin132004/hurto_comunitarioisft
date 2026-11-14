@@ -1,57 +1,102 @@
-/* Variables de diseño compartidas por el sistema y el login */
+/* ==========================================================================
+   AgroTech — Tokens de diseño
+   Paleta mineral y vegetal de alto contraste para lectura al sol,
+   tipografía editorial humanista (Source Serif 4) + técnica operativa (Plus Jakarta Sans).
+   ========================================================================== */
 :root {
-    /* Colores de la marca (tomados del logo) */
-    --at-900: #0a3a1f;
-    --at-800: #0f4d29;
-    --at-700: #17663a;
-    --at-600: #1f7d43;
-    --at-500: #39a33f;
-    --at-300: #8cc63f;
-    --at-100: #e8f4dc;
-    --at-50:  #f3f9ec;
+    /* Superficies y papel técnico */
+    --hc-papel:       #ffffff;
+    --hc-lienzo:      #f4f6f2;
+    --hc-salvia:      #ebf0e8;
+    --hc-salvia-2:    #dfe7da;
 
-    --agua-600: #1769aa;
-    --agua-100: #e3f0fb;
-    --cosecha-600: #ab550a; /* antes #c2610c: oscurecido para llegar a 4.5:1 sobre --cosecha-100 */
-    --cosecha-100: #fdf0e1;
-    --alerta-600: #c0392b;
-    --alerta-100: #fbe9e7;
-    --alerta-200: #f2c9c3;
-    --neutro-100: #eef0eb;
+    /* Tinta y jerarquía de lectura */
+    --hc-tinta:       #16241b;
+    --hc-tinta-2:     #46574c;
+    --hc-tinta-3:     #617166;
 
-    --fondo: #f5f6f1;
-    --superficie: #ffffff;
-    --borde: #e2e6dd;
-    --borde-suave: #edf0e9;
-    --texto: #14211a;
-    --texto-2: #5d6b62;
-    --texto-3: #66726a; /* antes #8b978f: oscurecido para llegar a 4.5:1 sobre --fondo */
+    /* Bordes técnicos definidos (visibles al sol) */
+    --hc-borde:       #cdd8c9;
+    --hc-borde-fuerte:#b2c2ad;
+    --hc-borde-fino:  #e2e9df;
 
-    --radio: 14px;
-    --radio-sm: 10px;
-    --sombra-1: 0 1px 2px rgba(20, 33, 26, .05), 0 1px 1px rgba(20, 33, 26, .03);
-    --sombra-2: 0 10px 30px -14px rgba(20, 33, 26, .22), 0 2px 6px -2px rgba(20, 33, 26, .06);
-    --ease: cubic-bezier(.22, .9, .3, 1);
-    --ancho-lateral: 264px;
+    /* Acentos semánticos agronómicos */
+    --hc-hoja:          #1b6636;
+    --hc-hoja-oscuro:   #114724;
+    --hc-hoja-claro:    #e7f3eb;
 
-    /* Nombres que usan los estilos propios de cada vista */
-    --huerto-verde: var(--at-600);
-    --huerto-verde-oscuro: var(--at-900);
-    --huerto-lima: var(--at-300);
-    --huerto-crema: var(--fondo);
+    --hc-acequia:       #0d588a;
+    --hc-acequia-oscuro:#093f63;
+    --hc-acequia-claro: #e4f0f8;
 
-    /* Bootstrap con los colores del sistema */
-    --bs-body-font-family: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --bs-body-color: var(--texto);
-    --bs-body-bg: var(--fondo);
-    --bs-border-color: var(--borde);
-    --bs-secondary-color: var(--texto-2);
-    --bs-success: #1f7d43;
-    --bs-success-rgb: 31, 125, 67;
-    --bs-primary: #1769aa;
-    --bs-primary-rgb: 23, 105, 170;
-    --bs-link-color: var(--at-700);
-    --bs-link-color-rgb: 23, 102, 58;
-    --bs-link-hover-color: var(--at-900);
-    --bs-link-hover-color-rgb: 10, 58, 31;
+    --hc-cosecha:       #9c5106;
+    --hc-cosecha-oscuro:#743b04;
+    --hc-cosecha-claro: #fcf0e1;
+
+    --hc-alerta:        #b3261e;
+    --hc-alerta-oscuro: #7d1913;
+    --hc-alerta-claro:  #fbeae8;
+
+    /* Tipografía */
+    --hc-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --hc-sans:  'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    /* Equivalencias con las variables globales existentes del sistema */
+    --at-900: #114724;
+    --at-800: #15562c;
+    --at-700: #1b6636;
+    --at-600: #1b6636;
+    --at-500: #298448;
+    --at-300: #78b856;
+    --at-100: #dfeede;
+    --at-50:  #e7f3eb;
+
+    --agua-600:    var(--hc-acequia);
+    --agua-100:    var(--hc-acequia-claro);
+    --cosecha-600: var(--hc-cosecha);
+    --cosecha-100: var(--hc-cosecha-claro);
+    --alerta-600:  var(--hc-alerta);
+    --alerta-100:  var(--hc-alerta-claro);
+    --alerta-200:  #f0c5c1;
+    --neutro-100:  var(--hc-salvia);
+
+    --fondo:       var(--hc-lienzo);
+    --superficie:  var(--hc-papel);
+    --borde:       var(--hc-borde);
+    --borde-suave: var(--hc-borde-fino);
+    --texto:       var(--hc-tinta);
+    --texto-2:     var(--hc-tinta-2);
+    --texto-3:     var(--hc-tinta-3);
+
+    --radio:    8px;
+    --radio-sm: 6px;
+    --sombra-1: 0 1px 2px rgba(22, 36, 27, .04);
+    --sombra-2: 0 6px 16px -8px rgba(22, 36, 27, .14);
+    --ease:     cubic-bezier(.22, .9, .3, 1);
+    --ancho-lateral: 260px;
+
+    /* Alias usados en vistas internas */
+    --huerto-verde:        var(--hc-hoja);
+    --huerto-verde-oscuro: var(--hc-tinta);
+    --huerto-lima:         var(--at-300);
+    --huerto-crema:        var(--hc-lienzo);
+
+    /* Integración con Bootstrap 5 */
+    --bs-body-font-family: var(--hc-sans);
+    --bs-body-color:       var(--hc-tinta);
+    --bs-body-bg:          var(--hc-lienzo);
+    --bs-border-color:     var(--hc-borde);
+    --bs-secondary-color:  var(--hc-tinta-2);
+    --bs-success:          #1b6636;
+    --bs-success-rgb:      27, 102, 54;
+    --bs-primary:          #0d588a;
+    --bs-primary-rgb:      13, 88, 138;
+    --bs-warning:          #9c5106;
+    --bs-warning-rgb:      156, 81, 6;
+    --bs-danger:           #b3261e;
+    --bs-danger-rgb:       179, 38, 30;
+    --bs-link-color:       var(--hc-hoja);
+    --bs-link-color-rgb:   27, 102, 54;
+    --bs-link-hover-color: var(--hc-hoja-oscuro);
+    --bs-link-hover-color-rgb: 17, 71, 36;
 }

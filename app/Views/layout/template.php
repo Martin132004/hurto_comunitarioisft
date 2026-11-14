@@ -13,7 +13,6 @@
     $menu = [
         'Huerto' => [
             ['/', '/', 'bi-grid-1x2', 'Panel'],
-            ['huerto/plano', 'huerto/plano', 'bi-map', 'Plano del huerto'],
             ['huerto/crear', 'huerto/crear', 'bi-plus-square', 'Nuevo cultivo'],
             ['huerto/problemas', 'huerto/problemas*', 'bi-bug', 'Problemas y plagas'],
             ['huerto/emergencia', 'huerto/emergencia*', 'bi-exclamation-octagon', 'Emergencia climática'],
@@ -45,7 +44,7 @@
     <link rel="apple-touch-icon" href="<?= base_url('img/agrotech-icono.png') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,600&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="<?= base_url('css/agrotech-tokens.css') ?>" rel="stylesheet">
@@ -149,7 +148,6 @@
         <main class="at-contenido" id="contenido" tabindex="-1">
             <?php if ($emergenciaTipo && ! url_is('huerto/emergencia*')): ?>
                 <?php
-                    // Mismo criterio que el plan: solo cuentan los pasos que el plan muestra hoy
                     $pasosValidos = array_keys(\App\Libraries\PlanEmergencia::clavesValidas($emergenciaActiva));
                     $pasosHechos = count(array_intersect(\App\Models\EmergenciaModel::lista($emergenciaActiva['pasos']), $pasosValidos));
                 ?>
@@ -179,13 +177,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     (function () {
-        const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        // Los íconos de Bootstrap Icons acompañan texto: los lectores de pantalla los saltean
         document.querySelectorAll('i.bi:not([aria-label]):not([role])').forEach(i => i.setAttribute('aria-hidden', 'true'));
 
-        // Bienvenida: la barra avanza por etapas, como una carga real, y al completarse se va.
-        // Se puede saltear con un clic o Escape.
         const bienvenida = document.getElementById('bienvenida');
         if (bienvenida) {
             const barra = document.getElementById('bienvenidaBarra');
@@ -193,7 +186,6 @@
             const textoPaso = document.getElementById('bienvenidaPaso');
             const textoPorcentaje = document.getElementById('bienvenidaPorcentaje');
 
-            // [milisegundos, porcentaje]: tramos rápidos y pausas cortas
             const tramos = [[0, 0], [600, 12], [1100, 19], [1900, 41], [2400, 47], [3200, 68], [3700, 74], [4400, 92], [4900, 100]];
             const pasos = [
                 [0,   'Iniciando sesión…'],
@@ -246,42 +238,13 @@
                     setTimeout(quitar, 600);
                 }
             };
-            // Empieza cuando ya apareció el logo
             setTimeout(() => requestAnimationFrame(avanzar), 500);
         }
 
-        // Borde de la barra superior al hacer scroll
         const barra = document.getElementById('barraSuperior');
         const marcarBarra = () => barra.classList.toggle('con-sombra', window.scrollY > 4);
         window.addEventListener('scroll', marcarBarra, { passive: true });
         marcarBarra();
-
-        // Los números de las tarjetas cuentan desde cero al cargar ("12,5 kg", "Cada 3", "80 %").
-        // Si una pantalla cubre la página (bienvenida, riego), esperan a que se vaya.
-        const formato = (valor, decimales) => valor.toLocaleString('es-AR', { minimumFractionDigits: decimales, maximumFractionDigits: decimales });
-        const contarNumeros = () => document.querySelectorAll('.stat-valor, .plan-dato .valor, [data-contar]').forEach(el => {
-            if (reducido || el.children.length) return;
-            const partes = el.textContent.trim().match(/^(\D*?)(\d[\d.]*(?:,\d+)?)(.*)$/);
-            if (!partes) return;
-            const [, antes, numero, despues] = partes;
-            const decimales = numero.includes(',') ? numero.split(',')[1].length : 0;
-            const final = parseFloat(numero.replace(/\./g, '').replace(',', '.'));
-            if (!final) return;
-            const inicio = performance.now();
-            const duracion = 900;
-            const paso = (ahora) => {
-                const t = Math.min(1, (ahora - inicio) / duracion);
-                const suave = 1 - Math.pow(1 - t, 3);
-                el.textContent = antes + formato(final * suave, decimales) + despues;
-                if (t < 1) requestAnimationFrame(paso);
-            };
-            requestAnimationFrame(paso);
-        });
-        if (document.querySelector('[data-cubierta]')) {
-            document.addEventListener('cubierta:sale', contarNumeros, { once: true });
-        } else {
-            contarNumeros();
-        }
     })();
 </script>
 <?= $this->renderSection('scripts') ?>

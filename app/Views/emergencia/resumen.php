@@ -16,7 +16,7 @@
 
     $inicio = strtotime($emergencia['inicio']);
     $horas = $emergencia['fin'] ? max(0, (strtotime($emergencia['fin']) - $inicio) / 3600) : 0;
-    $duracion = $horas < 1 ? round($horas * 60) . ' min' : round($horas, 1) . ' h';
+    $duracion = $horas < 1 ? round($horas * 60) . ' min' : number_format($horas, 1, ',', '.') . ' h';
     $problema = $tipo['problema'] ? '&problema=' . $tipo['problema'] : '';
 ?>
 
@@ -121,7 +121,7 @@
         <?php endif; ?>
     </div>
 
-    <a href="<?= base_url('huerto/emergencia') ?>" class="btn btn-link px-0 mt-3"><i class="bi bi-arrow-left me-1"></i> Volver a emergencias</a>
+    <a href="<?= base_url('huerto/emergencia') ?>" class="hc-volver mt-3"><i class="bi bi-arrow-left"></i> Volver a emergencias</a>
 </div>
 
 <?= $this->endSection() ?>

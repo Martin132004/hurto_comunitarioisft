@@ -3,72 +3,93 @@
 <?= $this->section('estilos') ?>
 <style>
     .riesgo-card {
-        background: #fff;
-        border-radius: 1.25rem;
-        border: 1px solid rgba(15, 61, 46, .06);
-        box-shadow: 0 4px 16px -8px rgba(15, 61, 46, .15);
-        padding: 1.1rem 1.25rem;
+        background: var(--hc-papel);
+        border-radius: 8px;
+        border: 1px solid var(--hc-borde);
+        border-top: 3px solid var(--hc-cosecha);
+        padding: 1rem 1.15rem;
         height: 100%;
+        display: flex;
+        flex-direction: column;
     }
     .riesgo-card .nombre {
+        font-family: var(--hc-serif);
         font-weight: 700;
-        color: var(--huerto-verde-oscuro);
+        font-size: 1.05rem;
+        color: var(--hc-tinta);
     }
     .riesgo-card ul {
         padding-left: 1.1rem;
-        margin-bottom: 0;
+        margin-bottom: .75rem;
     }
     .reporte-item {
         display: flex;
         gap: 1rem;
         align-items: center;
-        background: #fff;
-        border-radius: 1.25rem;
-        border: 1px solid rgba(15, 61, 46, .06);
-        box-shadow: 0 4px 16px -8px rgba(15, 61, 46, .15);
-        padding: .9rem 1.1rem;
+        background: var(--hc-papel);
+        border-radius: 6px;
+        border: 1px solid var(--hc-borde);
+        border-left: 4px solid var(--hc-hoja);
+        padding: .85rem 1.05rem;
         color: inherit;
         text-decoration: none;
-        transition: transform .15s, box-shadow .15s;
+        transition: background .15s, border-color .15s;
     }
     .reporte-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 24px -12px rgba(15, 61, 46, .35);
+        background: var(--hc-lienzo);
+        border-color: var(--hc-borde-fuerte);
+        border-left-color: var(--hc-hoja);
     }
     .reporte-miniatura {
-        width: 64px;
-        height: 64px;
-        border-radius: 1rem;
+        width: 58px;
+        height: 58px;
+        border-radius: 6px;
+        border: 1px solid var(--hc-borde);
         object-fit: cover;
         flex-shrink: 0;
-        background: var(--huerto-crema);
+        background: var(--hc-salvia);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.6rem;
-        color: var(--huerto-verde);
+        font-size: 1.4rem;
+        color: var(--hc-hoja);
     }
     .catalogo .accordion-item {
-        border: 0;
-        border-radius: 1rem !important;
+        border: 1px solid var(--hc-borde);
+        border-radius: 6px !important;
         overflow: hidden;
-        margin-bottom: .6rem;
-        box-shadow: 0 4px 16px -10px rgba(15, 61, 46, .2);
+        margin-bottom: .5rem;
+        background: var(--hc-papel);
     }
     .catalogo .accordion-button {
-        font-weight: 600;
-        color: var(--huerto-verde-oscuro);
+        font-family: var(--hc-serif);
+        font-weight: 700;
+        font-size: 1rem;
+        color: var(--hc-tinta);
+        padding: .85rem 1.1rem;
+        background: var(--hc-papel);
     }
     .catalogo .accordion-button:not(.collapsed) {
-        background: var(--huerto-crema);
+        background: var(--hc-salvia);
+        color: var(--hc-tinta);
         box-shadow: none;
+        border-bottom: 1px solid var(--hc-borde);
     }
-    .catalogo h6 {
-        font-size: .75rem;
-        text-transform: uppercase;
-        letter-spacing: .05em;
-        color: #6c757d;
+    .catalogo-columna {
+        background: var(--hc-lienzo);
+        border: 1px solid var(--hc-borde-fino);
+        border-radius: 6px;
+        padding: .75rem .9rem;
+        height: 100%;
+    }
+    .catalogo-subtitulo {
+        font-family: var(--hc-serif);
+        font-size: .88rem;
         font-weight: 700;
+        color: var(--hc-tinta);
+        padding-bottom: .3rem;
+        margin-bottom: .45rem;
+        border-bottom: 1px solid var(--hc-borde);
     }
 </style>
 <?= $this->endSection() ?>
@@ -81,13 +102,13 @@
 ?>
 
 <section class="huerto-hero mb-4">
-    <div class="row align-items-center g-4 position-relative" style="z-index: 1;">
+    <div class="row align-items-center g-3">
         <div class="col-lg-8">
-            <span class="badge-fecha d-inline-flex align-items-center gap-2 mb-3">
-                <i class="bi bi-geo-alt"></i> <?= $zona ? esc($zona['nombre']) : 'Sin zona elegida' ?>
+            <span class="badge-fecha mb-2">
+                <i class="bi bi-geo-alt text-success"></i> <?= $zona ? esc($zona['nombre']) : 'Sin zona configurada' ?>
             </span>
-            <h1 class="display-6 mb-2">Problemas y plagas</h1>
-            <p class="mb-0 opacity-75">Reportá lo que ves en tus plantas, con foto, y el técnico te responde con qué hacer.</p>
+            <h1 class="mb-1">Problemas y plagas</h1>
+            <p class="mb-0">Reportá lo que ves en tus plantas, con foto, y el técnico te responde con qué hacer.</p>
         </div>
         <div class="col-lg-4 text-lg-end">
             <a href="<?= base_url('huerto/problemas/nuevo') ?>" class="btn btn-huerto">
@@ -98,8 +119,8 @@
 </section>
 
 <?php foreach ($repetidos as $clave => $cultivos): ?>
-    <div class="alert alert-warning rounded-4 d-flex gap-2 align-items-start">
-        <i class="bi bi-arrows-angle-expand mt-1"></i>
+    <div class="alert alert-warning d-flex gap-2 align-items-start mb-3">
+        <i class="bi bi-exclamation-triangle-fill mt-1"></i>
         <div>
             <strong><?= esc($nombreProblema($clave)) ?> en varios cultivos:</strong> <?= esc($cultivos) ?>.
             Puede estar extendiéndose por el huerto. <a href="#problema-<?= esc($clave) ?>" class="alert-link">Ver qué hacer</a>
@@ -108,44 +129,48 @@
 <?php endforeach; ?>
 
 <?php if (! empty($vigilar)): ?>
-    <h5 class="seccion-titulo mb-1 mt-4"><i class="bi bi-binoculars me-2"></i>Vigilá en <?= $meses[(int) date('n') - 1] ?></h5>
-    <p class="text-muted small mb-3">Problemas frecuentes en esta época para los cultivos que tenés en el huerto.</p>
-    <div class="row g-3 mb-5">
-        <?php foreach ($vigilar as $clave => $afectados): ?>
-            <?php $p = $catalogo[$clave]; $tipo = $tipos[$p['tipo']] ?? $tipos['plaga']; ?>
-            <div class="col-md-6 col-lg-4">
-                <div class="riesgo-card">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="badge rounded-pill text-bg-<?= $tipo['color'] ?>"><i class="bi <?= $tipo['icono'] ?>"></i></span>
-                        <span class="nombre"><?= esc($p['nombre']) ?></span>
+    <div class="mb-4 mt-4">
+        <h5 class="seccion-titulo mb-1"><i class="bi bi-binoculars me-2"></i>Vigilá en <?= $meses[(int) date('n') - 1] ?></h5>
+        <p class="text-muted small mb-3">Problemas frecuentes en esta época para los cultivos que tenés en el huerto.</p>
+        <div class="row g-3">
+            <?php foreach ($vigilar as $clave => $afectados): ?>
+                <?php $p = $catalogo[$clave]; $tipo = $tipos[$p['tipo']] ?? $tipos['plaga']; ?>
+                <div class="col-md-6 col-lg-4">
+                    <div class="riesgo-card">
+                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+                            <span class="nombre" style="flex: 1 1 11rem;"><?= esc($p['nombre']) ?></span>
+                            <span class="badge text-bg-<?= $tipo['color'] ?>"><i class="bi <?= $tipo['icono'] ?> me-1"></i><?= esc($tipo['nombre']) ?></span>
+                        </div>
+                        <div class="small text-muted mb-2">En: <?= esc(implode(', ', $afectados)) ?></div>
+                        <div class="small fw-semibold mb-1">Qué buscar</div>
+                        <ul class="small text-muted">
+                            <?php foreach (array_slice($p['sintomas'], 0, 2) as $sintoma): ?>
+                                <li><?= esc($sintoma) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <a href="#problema-<?= esc($clave) ?>" class="small text-success fw-semibold text-decoration-none mt-auto">
+                            Cómo prevenirlo <i class="bi bi-arrow-down-short"></i>
+                        </a>
                     </div>
-                    <div class="small text-muted mb-2">En: <?= esc(implode(', ', $afectados)) ?></div>
-                    <div class="small fw-semibold">Qué buscar</div>
-                    <ul class="small text-muted mb-2">
-                        <?php foreach (array_slice($p['sintomas'], 0, 2) as $sintoma): ?>
-                            <li><?= esc($sintoma) ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                    <a href="#problema-<?= esc($clave) ?>" class="small text-success fw-semibold text-decoration-none">Cómo prevenirlo <i class="bi bi-arrow-down-short"></i></a>
                 </div>
-            </div>
-        <?php endforeach; ?>
+            <?php endforeach; ?>
+        </div>
     </div>
 <?php endif; ?>
 
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 mt-4">
     <h5 class="seccion-titulo mb-0"><i class="bi bi-clipboard2-pulse me-2"></i>Mis reportes</h5>
-    <div class="btn-group btn-group-sm" role="group">
-        <a href="<?= base_url('huerto/problemas') ?>" class="btn <?= $filtro === 'pendientes' ? 'btn-success' : 'btn-outline-success' ?>">Sin resolver</a>
-        <a href="<?= base_url('huerto/problemas?ver=resueltos') ?>" class="btn <?= $filtro === 'resueltos' ? 'btn-success' : 'btn-outline-success' ?>">Resueltos</a>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Filtrar reportes por estado">
+        <a href="<?= base_url('huerto/problemas') ?>" class="btn <?= $filtro === 'pendientes' ? 'btn-huerto' : 'btn-outline-success' ?>">Sin resolver</a>
+        <a href="<?= base_url('huerto/problemas?ver=resueltos') ?>" class="btn <?= $filtro === 'resueltos' ? 'btn-huerto' : 'btn-outline-success' ?>">Resueltos</a>
     </div>
 </div>
 
 <?php if (empty($reportes)): ?>
     <div class="estado-vacio mb-5">
-        <i class="bi bi-emoji-smile"></i>
-        <h5 class="fw-bold mt-3"><?= $filtro === 'resueltos' ? 'Todavía no hay problemas resueltos.' : 'No tenés problemas sin resolver.' ?></h5>
-        <p class="text-muted mb-0">Si ves hojas comidas, manchas o bichos, reportalo con una foto.</p>
+        <i class="bi bi-shield-check"></i>
+        <h5 class="fw-bold mt-2 mb-1"><?= $filtro === 'resueltos' ? 'Todavía no hay problemas resueltos.' : 'No tenés problemas sin resolver.' ?></h5>
+        <p class="text-muted small mb-0">Si ves hojas comidas, manchas o bichos, reportalo con una foto.</p>
     </div>
 <?php else: ?>
     <div class="d-grid gap-2 mb-5">
@@ -158,17 +183,17 @@
                     <span class="reporte-miniatura"><i class="bi bi-bug"></i></span>
                 <?php endif; ?>
                 <div class="flex-grow-1 min-w-0">
-                    <div class="fw-bold" style="color: var(--huerto-verde-oscuro)">
+                    <div class="fw-bold" style="font-family: var(--hc-serif); font-size: 1.02rem; color: var(--hc-tinta);">
                         <?= esc($nombreProblema($r['problema'])) ?>
-                        <?php if ($r['cultivo_nombre']): ?><span class="fw-normal text-muted">· <?= esc($r['cultivo_nombre']) ?></span><?php endif; ?>
+                        <?php if ($r['cultivo_nombre']): ?><span class="fw-normal text-muted" style="font-family: var(--hc-sans); font-size: .86rem;">· <?= esc($r['cultivo_nombre']) ?></span><?php endif; ?>
                     </div>
-                    <div class="small text-muted text-truncate"><?= esc($r['descripcion'] ?? 'Sin descripción') ?></div>
+                    <div class="small text-muted text-truncate"><?= esc($r['descripcion'] ?? 'Sin notas adicionales') ?></div>
                     <div class="small mt-1 d-flex flex-wrap gap-1">
-                        <span class="badge rounded-pill text-bg-light border"><?= date('d/m/Y', strtotime($r['created_at'])) ?></span>
-                        <span class="badge rounded-pill bg-<?= $gravedad['color'] ?>-subtle text-<?= $gravedad['color'] ?>-emphasis"><?= $gravedad['nombre'] ?></span>
+                        <span class="badge text-bg-light"><i class="bi bi-calendar3 me-1"></i><?= date('d/m/Y', strtotime($r['created_at'])) ?></span>
+                        <span class="badge bg-<?= $gravedad['color'] ?>-subtle text-<?= $gravedad['color'] ?>-emphasis border"><?= $gravedad['nombre'] ?></span>
                     </div>
                 </div>
-                <span class="badge rounded-pill text-bg-<?= $estado['color'] ?> flex-shrink-0"><i class="bi <?= $estado['icono'] ?> me-1"></i><span class="d-none d-sm-inline"><?= $estado['nombre'] ?></span></span>
+                <span class="badge text-bg-<?= $estado['color'] ?> flex-shrink-0"><i class="bi <?= $estado['icono'] ?> me-1"></i><span class="d-none d-sm-inline"><?= $estado['nombre'] ?></span></span>
             </a>
         <?php endforeach; ?>
     </div>
@@ -186,9 +211,9 @@
             <div class="accordion-item" id="problema-<?= esc($clave) ?>">
                 <h2 class="accordion-header">
                     <button class="accordion-button collapsed gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#detalle-<?= esc($clave) ?>">
-                        <span class="badge rounded-pill text-bg-<?= $tipo['color'] ?>"><i class="bi <?= $tipo['icono'] ?>"></i></span>
+                        <span class="badge text-bg-<?= $tipo['color'] ?>"><i class="bi <?= $tipo['icono'] ?>"></i></span>
                         <?= esc($p['nombre']) ?>
-                        <span class="small text-muted fw-normal d-none d-md-inline">· <?= $tipo['nombre'] ?></span>
+                        <span class="small text-muted fw-normal d-none d-md-inline" style="font-family: var(--hc-sans);">— <?= $tipo['nombre'] ?></span>
                     </button>
                 </h2>
                 <div id="detalle-<?= esc($clave) ?>" class="accordion-collapse collapse" data-bs-parent="#catalogo">
@@ -199,18 +224,24 @@
                                 · Más frecuente en <?= esc(implode(', ', array_map(fn ($m) => $meses[$m - 1], $p['meses']))) ?><?= ($zona['desfase_meses'] ?? 0) > 0 ? ' (en tu zona, un poco más tarde)' : '' ?>
                             <?php endif; ?>
                         </p>
-                        <div class="row g-4">
+                        <div class="row g-3">
                             <div class="col-md-4">
-                                <h6>Cómo reconocerlo</h6>
-                                <ul class="small mb-0"><?php foreach ($p['sintomas'] as $item): ?><li><?= esc($item) ?></li><?php endforeach; ?></ul>
+                                <div class="catalogo-columna">
+                                    <div class="catalogo-subtitulo"><i class="bi bi-eye me-1 text-secondary"></i>Cómo reconocerlo</div>
+                                    <ul class="small mb-0 ps-3"><?php foreach ($p['sintomas'] as $item): ?><li><?= esc($item) ?></li><?php endforeach; ?></ul>
+                                </div>
                             </div>
                             <div class="col-md-4">
-                                <h6>Qué hacer</h6>
-                                <ul class="small mb-0"><?php foreach ($p['manejo'] as $item): ?><li><?= esc($item) ?></li><?php endforeach; ?></ul>
+                                <div class="catalogo-columna">
+                                    <div class="catalogo-subtitulo"><i class="bi bi-prescription2 me-1 text-success"></i>Qué hacer</div>
+                                    <ul class="small mb-0 ps-3"><?php foreach ($p['manejo'] as $item): ?><li><?= esc($item) ?></li><?php endforeach; ?></ul>
+                                </div>
                             </div>
                             <div class="col-md-4">
-                                <h6>Cómo prevenirlo</h6>
-                                <ul class="small mb-0"><?php foreach ($p['prevencion'] as $item): ?><li><?= esc($item) ?></li><?php endforeach; ?></ul>
+                                <div class="catalogo-columna">
+                                    <div class="catalogo-subtitulo"><i class="bi bi-shield-check me-1 text-primary"></i>Cómo prevenirlo</div>
+                                    <ul class="small mb-0 ps-3"><?php foreach ($p['prevencion'] as $item): ?><li><?= esc($item) ?></li><?php endforeach; ?></ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -224,7 +255,6 @@
 
 <?= $this->section('scripts') ?>
 <script>
-    // Al seguir un enlace "Ver qué hacer", abrimos ese problema de la guía
     function abrirProblema() {
         const item = location.hash.startsWith('#problema-') && document.querySelector(location.hash);
         if (item) {

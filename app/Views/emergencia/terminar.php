@@ -58,11 +58,11 @@
             <textarea name="notas" id="notas" class="form-control" rows="3" maxlength="1000" placeholder="Ej. se voló la media sombra del cantero 2"></textarea>
         </section>
 
-        <div class="d-flex flex-wrap gap-2">
+        <div class="d-flex flex-wrap align-items-center gap-2">
             <button type="submit" class="btn btn-danger px-4 py-2 fw-semibold">
                 <i class="bi bi-tools me-1"></i> Ver cómo reparar
             </button>
-            <a href="<?= base_url('huerto/emergencia/' . $emergencia['id']) ?>" class="btn btn-link">Todavía no terminó, volver al plan</a>
+            <a href="<?= base_url('huerto/emergencia/' . $emergencia['id']) ?>" class="hc-volver">Todavía no terminó, volver al plan</a>
         </div>
     </form>
 </div>
