@@ -8,7 +8,6 @@ use App\Models\CosechaModel;
 use App\Models\CultivoModel;
 use App\Models\EspecieModel;
 use App\Models\HuertoModel;
-use App\Models\PlanoElementoModel;
 use App\Models\ProblemaModel;
 use App\Models\ReporteProblemaModel;
 use App\Models\RiegoModel;
@@ -114,11 +113,6 @@ class Huerto extends BaseController
             'estado'                 => 'En Crecimiento',
             'ultimo_riego'           => null,
         ];
-
-        $canteroId = (int) $this->request->getPost('cantero_id');
-        if (isset($this->canteros()[$canteroId])) {
-            $datos['cantero_id'] = $canteroId;
-        }
 
         (new CultivoModel())->save($datos);
 
@@ -369,7 +363,6 @@ class Huerto extends BaseController
         $activos = $this->cultivosActivos();
 
         return view('huerto/crear', [
-            'canteros' => $this->canteros(),
             'horarios' => CultivoModel::HORARIOS_RIEGO,
             'especies' => (new EspecieModel())->catalogo(),
             'activos'  => $activos,
@@ -385,12 +378,6 @@ class Huerto extends BaseController
                 'reservorio'        => (int) $this->huerto()['reservorio_litros'],
             ],
         ]);
-    }
-
-    // Canteros del plano del huerto donde se puede ubicar un cultivo: [id => nombre]
-    private function canteros(): array
-    {
-        return (new PlanoElementoModel())->plantables($this->huerto()['id']);
     }
 
     // Reportes sin resolver y problemas repetidos para mostrar en el panel

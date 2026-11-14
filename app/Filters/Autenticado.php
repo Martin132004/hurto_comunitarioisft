@@ -15,7 +15,7 @@ class Autenticado implements FilterInterface
             return null;
         }
 
-        // Pedidos por fetch (guardar el plano): respuesta JSON en lugar de una redirección
+        // Pedidos por fetch: respuesta JSON en lugar de una redirección
         if ($request->hasHeader('X-Requested-With')) {
             return service('response')->setStatusCode(401)->setJSON([
                 'ok'    => false,

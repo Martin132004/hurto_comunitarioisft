@@ -1,4 +1,4 @@
-// Funciones compartidas por la guía de cultivo (huerto/crear) y el plano del huerto:
+// Funciones compartidas por la guía de cultivo (huerto/crear):
 // textos, fechas, reconocimiento de especies y calendario de heladas de la zona.
 
 export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];

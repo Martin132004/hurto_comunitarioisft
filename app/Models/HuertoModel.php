@@ -37,8 +37,6 @@ class HuertoModel extends Model
         'turno_referencia',
         'turno_dias_semana',
         'reservorio_litros',
-        'plano_ancho',
-        'plano_largo',
     ];
 
     protected $useTimestamps = true;
@@ -54,8 +52,6 @@ class HuertoModel extends Model
         'turno_referencia'  => null,
         'turno_dias_semana' => null,
         'reservorio_litros' => 0,
-        'plano_ancho'       => 12,
-        'plano_largo'       => 10,
     ];
 
     // Por ahora el sistema gestiona un solo huerto: devolvemos el primero (o valores por defecto)

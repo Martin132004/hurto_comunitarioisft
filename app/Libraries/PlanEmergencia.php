@@ -5,8 +5,6 @@ namespace App\Libraries;
 use App\Models\CultivoModel;
 use App\Models\EmergenciaModel;
 use App\Models\EspecieModel;
-use App\Models\HuertoModel;
-use App\Models\PlanoElementoModel;
 
 // Planes de contingencia ante una emergencia climática: qué hacer ya, mientras dura y cómo reparar los daños
 class PlanEmergencia
@@ -17,7 +15,6 @@ class PlanEmergencia
     // Días desde la siembra en que un cultivo todavía se considera plantín
     private const DIAS_PLANTIN = 21;
 
-    // 'requiere' muestra el paso solo si el plano tiene ese elemento (tunel o media_sombra)
     public const TIPOS = [
         'zonda' => [
             'nombre'    => 'Viento Zonda',
@@ -37,8 +34,8 @@ class PlanEmergencia
                     'z_cobertura' => ['texto' => 'Cubrí el suelo con paja o rastrojo y sujetala', 'detalle' => 'Reduce la evaporación. Mojala o poné peso encima para que no se vuele.'],
                     'z_plantines' => ['texto' => 'Protegé plantines y almácigos', 'detalle' => 'Entralos a reparo o tapalos con cajones o tela bien sujeta.'],
                     'z_sueltos'   => ['texto' => 'Guardá o atá todo lo que se pueda volar', 'detalle' => 'Herramientas, baldes, bolsas, chapas y carteles.'],
-                    'z_sombra'    => ['texto' => 'Revisá la media sombra', 'detalle' => 'Si está floja, reforzá las ataduras o enrollala: con viento fuerte se rasga y arrastra la estructura.', 'requiere' => 'media_sombra'],
-                    'z_tunel'     => ['texto' => 'Cerrá bien el túnel', 'detalle' => 'Bajá y sujetá los laterales: si el viento entra, levanta el plástico.', 'requiere' => 'tunel'],
+                    'z_sombra'    => ['texto' => 'Revisá la media sombra', 'detalle' => 'Si está floja, reforzá las ataduras o enrollala: con viento fuerte se rasga y arrastra la estructura.'],
+                    'z_tunel'     => ['texto' => 'Cerrá bien el túnel', 'detalle' => 'Bajá y sujetá los laterales: si el viento entra, levanta el plástico.'],
                 ],
                 'durante' => [
                     'z_resguardo' => ['texto' => 'Quedate a resguardo', 'detalle' => 'No hace falta estar en la huerta: lo importante ya está hecho.'],
@@ -66,7 +63,7 @@ class PlanEmergencia
                     'g_plantines' => ['texto' => 'Entrá plantines y macetas bajo techo', 'detalle' => 'Son lo primero que se pierde con la piedra.'],
                     'g_guardar'   => ['texto' => 'Guardá herramientas y lo que se pueda romper', 'detalle' => 'También mangueras y goteros sueltos.'],
                     'g_desagues'  => ['texto' => 'Despejá desagües y acequias', 'detalle' => 'Si se tapan con hielo y hojas, el agua inunda los canteros.'],
-                    'g_tunel'     => ['texto' => 'Cerrá el túnel y tené repuesto a mano', 'detalle' => 'Si el plástico es fino puede romperse: tené cinta o un plástico de repuesto.', 'requiere' => 'tunel'],
+                    'g_tunel'     => ['texto' => 'Cerrá el túnel y tené repuesto a mano', 'detalle' => 'Si el plástico es fino puede romperse: tené cinta o un plástico de repuesto.'],
                 ],
                 'durante' => [
                     'g_techo'  => ['texto' => 'Quedate bajo techo', 'detalle' => 'No salgas a tapar plantas mientras cae: el granizo lastima.'],
@@ -92,7 +89,7 @@ class PlanEmergencia
                     'h_tapar'     => ['texto' => 'Tapá los cultivos sensibles al atardecer', 'detalle' => 'Con manta antihelada, tela o cartón que llegue hasta el suelo. Que el plástico no toque las hojas.'],
                     'h_macetas'   => ['texto' => 'Entrá macetas y plantines a reparo', 'detalle' => 'Contra una pared o bajo techo, lejos del frío del suelo abierto.'],
                     'h_cosechar'  => ['texto' => 'Cosechá lo sensible que ya esté listo', 'detalle' => 'Tomates, zapallitos o porotos maduros no se recuperan si se hielan.'],
-                    'h_tunel'     => ['texto' => 'Cerrá el túnel antes de que baje el sol', 'detalle' => 'Adentro también puede helar en noches muy frías: sumá manta sobre los cultivos sensibles.', 'requiere' => 'tunel'],
+                    'h_tunel'     => ['texto' => 'Cerrá el túnel antes de que baje el sol', 'detalle' => 'Adentro también puede helar en noches muy frías: sumá manta sobre los cultivos sensibles.'],
                 ],
                 'durante' => [
                     'h_destapar' => ['texto' => 'A la mañana destapá cuando suba la temperatura', 'detalle' => 'Si las dejás tapadas con sol fuerte se cocinan.'],
@@ -209,27 +206,10 @@ class PlanEmergencia
         ],
     ];
 
-    // Pasos del plan de un tipo, sin los que piden elementos que el huerto no tiene
-    public static function pasos(string $tipo, array $elementosPlano): array
-    {
-        $tiene = [
-            'tunel'        => in_array('tunel', array_column($elementosPlano, 'tipo'), true),
-            'media_sombra' => (bool) array_filter(array_column($elementosPlano, 'media_sombra')),
-        ];
-
-        return array_map(
-            fn ($pasos) => array_filter($pasos, fn ($p) => ! isset($p['requiere']) || $tiene[$p['requiere']]),
-            self::TIPOS[$tipo]['pasos']
-        );
-    }
-
-    // Pasos del plan según el plano actual del huerto
+    // Pasos del plan de un tipo
     public static function pasosDelHuerto(string $tipo): array
     {
-        $huerto = (new HuertoModel())->actual();
-        $elementos = $huerto['id'] ? (new PlanoElementoModel())->delHuerto($huerto['id']) : [];
-
-        return self::pasos($tipo, $elementos);
+        return self::TIPOS[$tipo]['pasos'];
     }
 
     // Pasos que se pueden marcar ahora: los del plan mientras está activa, los de reparación cuando terminó
